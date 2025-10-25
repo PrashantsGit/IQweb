@@ -15,7 +15,7 @@
                 <p>{{ test.description }}</p>
                 <p>Duration: {{ test.duration }} minutes</p>
                 
-                <a href="#">Start Test</a>
+                <a href="{% url 'test_start' test.pk %}">Start Test</a>
                 
                 <hr>
             </li>
