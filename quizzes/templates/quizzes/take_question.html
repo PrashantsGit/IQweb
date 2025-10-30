@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Question {{ question_num }} of {{ total_questions }}</title>
+</head>
+<body>
+    <div style="text-align: right; border: 1px solid red; padding: 10px;">
+        Time Remaining: <span id="timer">{{ remaining_time }}</span> seconds
+    </div>
+
+    <h1>Test: {{ attempt.test.title }}</h1>
+    <h2>Question {{ question_num }} of {{ total_questions }}</h2>
+    
+    <p>Progress: {{ progress_percent }}% Complete</p>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <h3>{{ question.text }}</h3>
+
+        {% if question.image %}
+            <img src="{{ question.image.url }}" alt="Question Image" style="max-width: 100%;">
+        {% endif %}
+
+        {% if question.question_type == 'MC' %}
+            {% for answer in answers %}
+                <div>
+                    <input type="radio" id="answer-{{ answer.pk }}" name="answer" value="{{ answer.pk }}" required>
+                    <label for="answer-{{ answer.pk }}">{{ answer.text }}</label>
+                </div>
+            {% endfor %}
+        
+        {% elif question.question_type == 'LG' %}
+            <textarea name="text_input" rows="5" cols="50" placeholder="Enter your answer here..."></textarea>
+            
+        {% else %}
+            <p>Unsupported question type: {{ question.get_question_type_display }}</p>
+        {% endif %}
+
+        <br>
+        <button type="submit">Submit Answer and Continue</button>
+    </form>
+
+    <script>
+        // Simple JavaScript Timer (client-side only for display)
+        let timerDisplay = document.getElementById('timer');
+        let timeLeft = parseInt(timerDisplay.textContent);
+
+        function updateTimer() {
+            if (timeLeft <= 0) {
+                // Time up! Automatically submit the form (or redirect)
+                alert("Time's up! Submitting test.");
+                window.location.href = "{% url 'test_submit' attempt_id=attempt.pk %}"; 
+                return;
+            }
+            timeLeft -= 1;
+            timerDisplay.textContent = timeLeft;
+        }
+
+        setInterval(updateTimer, 1000);
+    </script>
+</body>
+</html>

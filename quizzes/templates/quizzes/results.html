@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Results</title>
+</head>
+<body>
+    <h1>Test Results: {{ attempt.test.title }}</h1>
+    
+    {% if attempt.is_completed %}
+        <p>Completion Time: {{ attempt.end_time|date:"H:i:s, F j, Y" }}</p>
+
+        {% if total_questions %}
+            <h2>Score Summary</h2>
+            <p>You answered *{{ correct_count }}* out of *{{ total_questions }}* questions correctly.</p>
+            <p>Final Score: *{{ score_percentage|floatformat:1 }}%*</p>
+
+            <hr>
+            <h3>Next Steps</h3>
+            <p>Your results have been saved to your dashboard.</p>
+            <p><a href="{% url 'test_list' %}">Take another test</a></p>
+        {% else %}
+            <p>No questions were found for this test.</p>
+        {% endif %}
+
+    {% else %}
+        <p>This test attempt is still marked as incomplete. Something went wrong with submission.</p>
+    {% endif %}
+
+</body>
+</html>
