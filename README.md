@@ -35,8 +35,8 @@ This project is a work in progress.
 * Prashant Chandra - https://github.com/PrashantsGit
 * Email:rajprashant032@gmail.com
 * Rishav Kumar - https://github.com/rishavkr2002
-* Email - rishavkumar1971@gmail.com
+* Email : rishavkumar1971@gmail.com
 * pinnamaraju Sri harshita - https://github.com/pinnamarajusriharshita-hash
-* pinnamarajusriharshita@gmail.com
+* Email : pinnamarajusriharshita@gmail.com
 
 
