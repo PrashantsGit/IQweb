@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'quizzes',
+    'quizzes.apps.QuizzesConfig',
 ]
 
 MIDDLEWARE = [
@@ -125,3 +125,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = '/' # Redirect to the test list after login
 LOGOUT_REDIRECT_URL = '/' # Redirect to the test list after logout
 LOGIN_URL = '/accounts/login/' # Default URL for the login page
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

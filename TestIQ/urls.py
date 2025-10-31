@@ -18,9 +18,19 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings # New Import!
+from django.conf.urls.static import static # New Import!
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')), # Add this line
+    
+    # 1. Built-in Authentication URLs (for login, logout, etc.)
+    path('accounts/', include('django.contrib.auth.urls')), 
+    
+    # 2. Map the root URL (/) to the quizzes app
     path('', include('quizzes.urls')),
 ]
+
+# 3. Serving media files during development (Crucial for question images)
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
