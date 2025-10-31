@@ -148,7 +148,7 @@ def test_submit(request, attempt_id):
         'score_percentage': score_percentage,
     })
 
- @login_required
+@login_required
 def user_dashboard(request):
     """
     Displays the user's profile and history of completed test attempts.
