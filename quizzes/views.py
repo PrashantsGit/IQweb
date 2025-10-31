@@ -147,3 +147,25 @@ def test_submit(request, attempt_id):
         'total_questions': total_questions,
         'score_percentage': score_percentage,
     })
+
+ @login_required
+def user_dashboard(request):
+    """
+    Displays the user's profile and history of completed test attempts.
+    """
+    # Fetch all completed attempts for the current user, ordered newest first
+    completed_attempts = UserTestAttempt.objects.filter(
+        user=request.user, 
+        is_completed=True
+    ).order_by('-end_time')
+
+    # Optionally, calculate average score across all completed tests
+    total_score = sum(a.score for a in completed_attempts if a.score is not None)
+    average_score = total_score / completed_attempts.count() if completed_attempts.count() > 0 else 0
+
+    context = {
+        'completed_attempts': completed_attempts,
+        'average_score': round(average_score, 1),
+    }
+
+    return render(request, 'quizzes/user_dashboard.html', context)

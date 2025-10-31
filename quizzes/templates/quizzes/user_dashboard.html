@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>{{ request.user.username }}'s Dashboard</title>
+
+</head>
+
+<body>
+
+    <h1>Welcome, {{ request.user.username }}!</h1>
+
+    
+
+    <p>Overall Average Score: *{{ average_score }}%*</p>
+
+    
+
+    <hr>
+
+    
+
+    <h2>Test History</h2>
+
+    
+
+    {% if completed_attempts %}
+
+        <table border="1" cellpadding="10" cellspacing="0">
+
+            <thead>
+
+                <tr>
+
+                    <th>Test Name</th>
+
+                    <th>Score (%)</th>
+
+                    <th>Date Taken</th>
+
+                    <th>Details</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for attempt in completed_attempts %}
+
+                <tr>
+
+                    <td>{{ attempt.test.title }}</td>
+
+                    <td>*{{ attempt.score }}%*</td>
+
+                    <td>{{ attempt.end_time|date:"M j, Y H:i" }}</td>
+
+                    <td><a href="{% url 'test_submit' attempt_id=attempt.pk %}">View Results</a></td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    {% else %}
+
+        <p>You have not completed any tests yet. <a href="{% url 'test_list' %}">Start a test now!</a></p>
+
+    {% endif %}
+
+
+
+    <p style="margin-top: 20px;"><a href="{% url 'logout' %}">Logout</a></p>
+
+
+
+</body>
+
+</html>

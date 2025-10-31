@@ -15,4 +15,7 @@ urlpatterns = [
 
     # 4. View for submitting the final test
     path('<int:attempt_id>/submit/', views.test_submit, name='test_submit'),
+
+    # 5. New URL for user's dashboard 
+    path('dashboard/', views.user_dashboard, name='user_dashboard'),
 ]
