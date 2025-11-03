@@ -3,55 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <title>Question {{ question_num }} of {{ total_questions }}</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+        }
+
+        .question-container {
+            max-width: 700px;
+            margin: 3rem auto;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 2rem 2.5rem;
+        }
+
+        .timer-box {
+            text-align: right;
+            font-weight: 500;
+            color: #fff;
+            background: rgba(255,255,255,0.1);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem;
+        }
+
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+
+        .progress {
+            height: 10px;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+
+        .form-check-label {
+            font-size: 1.05rem;
+            cursor: pointer;
+        }
+
+        .btn-next {
+            background-color: #2575fc;
+            color: white;
+            font-weight: 600;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.7rem 1.5rem;
+            margin-top: 1.5rem;
+            transition: background 0.2s;
+        }
+
+        .btn-next:hover {
+            background-color: #1b5ed9;
+        }
+
+        img.question-image {
+            display: block;
+            margin: 1rem auto;
+            border-radius: 0.5rem;
+            max-width: 100%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+    </style>
 </head>
 <body>
-    <div style="text-align: right; border: 1px solid red; padding: 10px;">
-        Time Remaining: <span id="timer">{{ remaining_time }}</span> seconds
+
+    <!-- Timer Section -->
+    <div class="timer-box">
+        ⏱ Time Remaining: <span id="timer">{{ remaining_time }}</span> seconds
     </div>
 
-    <h1>Test: {{ attempt.test.title }}</h1>
-    <h2>Question {{ question_num }} of {{ total_questions }}</h2>
-    
-    <p>Progress: {{ progress_percent }}% Complete</p>
+    <div class="question-container">
+        <h1>{{ attempt.test.title }}</h1>
+        <h2>Question {{ question_num }} of {{ total_questions }}</h2>
 
-    <form method="POST">
-        {% csrf_token %}
+        <!-- Progress Bar -->
+        <div class="progress">
+            <div class="progress-bar bg-primary" role="progressbar"
+                 style="width: {{ progress_percent }}%;"
+                 aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <p class="text-center text-muted mb-4">{{ progress_percent }}% complete</p>
 
-        <h3>{{ question.text }}</h3>
-
-        {% if question.image %}
-            <img src="{{ question.image.url }}" alt="Question Image" style="max-width: 100%;">
-        {% endif %}
-
-        {% if question.question_type == 'MC' %}
-            {% for answer in answers %}
-                <div>
-                    <input type="radio" id="answer-{{ answer.pk }}" name="answer" value="{{ answer.pk }}" required>
-                    <label for="answer-{{ answer.pk }}">{{ answer.text }}</label>
-                </div>
-            {% endfor %}
-        
-        {% elif question.question_type == 'LG' %}
-            <textarea name="text_input" rows="5" cols="50" placeholder="Enter your answer here..."></textarea>
+        <!-- Question Form -->
+        <form method="POST">
+            {% csrf_token %}
             
-        {% else %}
-            <p>Unsupported question type: {{ question.get_question_type_display }}</p>
-        {% endif %}
+            <h4 class="mb-3">{{ question.text }}</h4>
 
-        <br>
-        <button type="submit">Submit Answer and Continue</button>
-    </form>
+            {% if question.image %}
+                <img src="{{ question.image.url }}" alt="Question Image" class="question-image">
+            {% endif %}
 
+            {% if question.question_type == 'MC' %}
+                {% for answer in answers %}
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" id="answer-{{ answer.pk }}" name="answer" value="{{ answer.pk }}" required>
+                        <label class="form-check-label" for="answer-{{ answer.pk }}">{{ answer.text }}</label>
+                    </div>
+                {% endfor %}
+            
+            {% elif question.question_type == 'LG' %}
+                <div class="mb-3">
+                    <textarea class="form-control" name="text_input" rows="5" placeholder="Enter your answer here..."></textarea>
+                </div>
+
+            {% else %}
+                <div class="alert alert-warning">
+                    Unsupported question type: {{ question.get_question_type_display }}
+                </div>
+            {% endif %}
+
+            <div class="text-center">
+                <button type="submit" class="btn-next">Submit & Continue →</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Footer -->
+    <p class="text-center text-light mt-4">IQ Test Platform © {{ now|date:"Y" }}</p>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Timer Script -->
     <script>
-        // Simple JavaScript Timer (client-side only for display)
         let timerDisplay = document.getElementById('timer');
         let timeLeft = parseInt(timerDisplay.textContent);
 
         function updateTimer() {
             if (timeLeft <= 0) {
-                // Time up! Automatically submit the form (or redirect)
-                alert("Time's up! Submitting test.");
-                window.location.href = "{% url 'test_submit' attempt_id=attempt.pk %}"; 
+                alert("Time's up! Submitting your test.");
+                window.location.href = "{% url 'test_submit' attempt_id=attempt.pk %}";
                 return;
             }
             timeLeft -= 1;
