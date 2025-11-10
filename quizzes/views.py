@@ -4,6 +4,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from .models import Test, UserTestAttempt, Question, Answer, UserAnswer 
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib import messages
 
 def test_list(request):
     """Displays a list of all available IQ tests."""
@@ -169,3 +171,21 @@ def user_dashboard(request):
     }
 
     return render(request, 'quizzes/user_dashboard.html', context)
+
+def register(request):
+    """
+    Handles user registration using Django's built-in UserCreationForm.
+    """
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            messages.success(request, f'Account created for {user.username}! You can now log in.')
+            return redirect('login') 
+            
+    else:
+        form = UserCreationForm()
+
+    context = {'form': form, 'title': 'Register'}
+    # Renders the registration template
+    return render(request, 'registration/register.html', context)

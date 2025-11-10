@@ -18,4 +18,7 @@ urlpatterns = [
 
     # 5. New URL for user's dashboard 
     path('dashboard/', views.user_dashboard, name='user_dashboard'),
+
+    # 5. New URL for user registration
+    path('register/', views.register, name='register'),
 ]

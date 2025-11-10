@@ -29,10 +29,24 @@
         .nav-link {
             color: #333 !important;
             font-weight: 500;
+            margin-left: 10px;
         }
 
         .nav-link:hover {
             color: #2575fc !important;
+        }
+
+        .logout-btn {
+            color: #dc3545 !important;
+            border: none;
+            background: none;
+            font-weight: 500;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            color: #b02a37 !important;
         }
 
         .hero {
@@ -114,23 +128,25 @@
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
+
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                <ul class="navbar-nav">
+                <ul class="navbar-nav align-items-center">
                     {% if request.user.is_authenticated %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'user_dashboard' %}">Dashboard</a>
+                        </li>
                         <li class="nav-item">
-    <form method="POST" action="{% url 'logout' %}" class="d-flex">
-        {% csrf_token %}
-        <button type="submit" class="nav-link btn btn-link" style="color: inherit; text-decoration: none; padding: 0.5rem 1rem; cursor: pointer;">
-            Logout
-        </button>
-    </form>
-</li>
+                            <form method="POST" action="{% url 'logout' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="logout-btn">Logout</button>
+                            </form>
+                        </li>
                     {% else %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'register' %}">Sign Up</a>
                         </li>
                     {% endif %}
                 </ul>
