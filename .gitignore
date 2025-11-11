@@ -1,15 +1,13 @@
 # Django-specific files
 *.log
 *.pot
-*.pyc
-__pycache__/
+
 local_settings.py
-db.sqlite3
-media/
+
 
 # Virtual Environment
 .env
-venv/
+mvenv/
 env/
 
 # IDE-specific files (e.g., PyCharm)
@@ -17,3 +15,13 @@ env/
 
 # Operating system files (e.g., macOS)
 .DS_Store
+# Ignore virtual environments
+venv/
+__pycache__/
+*.pyc
+
+# Ignore database
+db.sqlite3
+
+# Ignore media uploads
+/media/
