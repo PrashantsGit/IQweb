@@ -1,66 +1,69 @@
-# quizzes/models.py
-
 from django.db import models
-from django.contrib.auth import get_user_model 
+from django.contrib.auth.models import User
 
-User = get_user_model() 
+DIFFICULTY_LEVELS = [
+    ('E', 'Easy'),
+    ('M', 'Medium'),
+    ('H', 'Hard'),
+]
 
-# 1. The main Test/Quiz model
+CATEGORY_CHOICES = [
+    ('VR', 'Verbal Reasoning'),
+    ('NR', 'Numerical Reasoning'),
+    ('LR', 'Logical Reasoning'),
+    ('SR', 'Spatial Reasoning'),
+    ('MR', 'Memory'),
+]
+
+
 class Test(models.Model):
-    title = models.CharField(max_length=200)
-    description = models.TextField()
-    duration = models.IntegerField(default=30, help_text="Duration in minutes")
-    created_at = models.DateTimeField(auto_now_add=True)
+    title = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    duration = models.IntegerField(help_text="Duration in minutes")
 
     def __str__(self):
         return self.title
 
-# 2. The Question model
-class Question(models.Model):
-    TEST_TYPES = [
-        ('MC', 'Multiple Choice'),
-        ('VI', 'Visual/Image'),
-        ('LG', 'Logic/Text Input'),
-    ]
 
-    test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name='questions')
+class Question(models.Model):
+    test = models.ForeignKey(Test, on_delete=models.CASCADE)
     text = models.TextField()
-    question_type = models.CharField(max_length=2, choices=TEST_TYPES, default='MC')
-    # Make sure you have the MEDIA settings in settings.py for images to work
-    image = models.ImageField(upload_to='question_images/', blank=True, null=True) 
+    image = models.ImageField(upload_to='questions/', blank=True, null=True)
+    question_type = models.CharField(max_length=10, default='MC')
+    category = models.CharField(max_length=2, choices=CATEGORY_CHOICES, default='LR')
+    difficulty = models.CharField(max_length=1, choices=DIFFICULTY_LEVELS, default='M')
 
     def __str__(self):
-        return f"{self.test.title} - Question {self.id}"
+        return self.text[:80]
 
-# 3. The Answer Option model
+
 class Answer(models.Model):
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answers')
-    text = models.CharField(max_length=500)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    text = models.CharField(max_length=255)
     is_correct = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.question.id}: {self.text[:30]}..."
+        return f"{self.text} ({'✔' if self.is_correct else '✖'})"
 
 
-# 4. Model to track a specific user's attempt at a test (NEW)
 class UserTestAttempt(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    test = models.ForeignKey('Test', on_delete=models.CASCADE)
+    test = models.ForeignKey(Test, on_delete=models.CASCADE)
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(null=True, blank=True)
-    score = models.IntegerField(null=True, blank=True)
     is_completed = models.BooleanField(default=False)
+    score = models.FloatField(default=0)
+    iq_score = models.FloatField(default=0)
 
     def __str__(self):
-        return f"{self.user.username}'s attempt on {self.test.title}"
+        return f"{self.user.username} - {self.test.title}"
 
-# 5. Model to record the user's answer to a single question (NEW)
+
 class UserAnswer(models.Model):
-    attempt = models.ForeignKey(UserTestAttempt, on_delete=models.CASCADE, related_name='answers')
-    question = models.ForeignKey('Question', on_delete=models.CASCADE)
-    selected_answer = models.ForeignKey('Answer', on_delete=models.SET_NULL, null=True, blank=True) 
-    text_input = models.TextField(blank=True) 
-    is_correct = models.BooleanField(default=False)
+    attempt = models.ForeignKey(UserTestAttempt, on_delete=models.CASCADE)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    selected_answer = models.ForeignKey(Answer, on_delete=models.CASCADE, null=True, blank=True)
+    text_input = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"Answer for Q{self.question.id} by {self.attempt.user.username}"
+        return f"{self.attempt.user.username} - {self.question.text[:40]}"

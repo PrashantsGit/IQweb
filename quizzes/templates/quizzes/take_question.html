@@ -135,20 +135,46 @@
 
     <!-- Timer Script -->
     <script>
-        let timerDisplay = document.getElementById('timer');
-        let timeLeft = parseInt(timerDisplay.textContent);
+    // Persistent timer using sessionStorage
+    const timerDisplay = document.getElementById('timer');
+    const totalTime = {{ remaining_time }}; // from backend (seconds)
+    const testKey = "timer_{{ attempt.id }}"; // unique key for this attempt
 
-        function updateTimer() {
-            if (timeLeft <= 0) {
-                alert("Time's up! Submitting your test.");
-                window.location.href = "{% url 'test_submit' attempt_id=attempt.pk %}";
-                return;
-            }
-            timeLeft -= 1;
-            timerDisplay.textContent = timeLeft;
+    // Load previous remaining time if exists
+    let timeLeft = sessionStorage.getItem(testKey)
+        ? parseInt(sessionStorage.getItem(testKey))
+        : totalTime;
+
+    function updateTimer() {
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            alert("⏰ Time's up! Submitting your test automatically.");
+            window.location.href = "{% url 'test_submit' attempt_id=attempt.pk %}";
+            return;
         }
 
-        setInterval(updateTimer, 1000);
-    </script>
+        // Display minutes and seconds
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+        // Save remaining time every tick
+        sessionStorage.setItem(testKey, timeLeft);
+
+        timeLeft -= 1;
+    }
+
+    const timerInterval = setInterval(updateTimer, 1000);
+
+    // Save progress before navigating away
+    window.addEventListener("beforeunload", () => {
+        sessionStorage.setItem(testKey, timeLeft);
+    });
+</script>
+
+    <footer>
+  &copy; {% now "Y" %} IQ Test Platform | Sharpen your intelligence every day 🧠
+</footer>
+
 </body>
 </html>

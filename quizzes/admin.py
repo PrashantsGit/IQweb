@@ -16,7 +16,8 @@ class QuestionAdmin(admin.ModelAdmin):
 
 @admin.register(Test)
 class TestAdmin(admin.ModelAdmin):
-    list_display = ('title', 'duration', 'created_at')
+    list_display = ('title', 'duration')
+
 
 
 

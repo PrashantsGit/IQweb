@@ -202,5 +202,15 @@
             rules.special.className = hasSpecial ? "valid" : "invalid";
         });
     </script>
+    <script>
+document.querySelectorAll('input, select, textarea').forEach(el => {
+  if (!el.classList.contains('btn')) el.classList.add('form-control');
+});
+</script>
+
+    <footer>
+  &copy; {% now "Y" %} IQ Test Platform | Sharpen your intelligence every day 🧠
+</footer>
+
 </body>
 </html>

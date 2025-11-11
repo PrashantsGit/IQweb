@@ -74,9 +74,19 @@
     <a href="{% url 'register' %}">**Sign Up Here**</a>
 </p>
     </div>
+    <footer>
+  &copy; {% now "Y" %} IQ Test Platform | Sharpen your intelligence every day 🧠
+</footer>
+
 
     <!-- Bootstrap JS (optional) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+document.querySelectorAll('input, select, textarea').forEach(el => {
+  if (!el.classList.contains('btn')) el.classList.add('form-control');
+});
+</script>
+
 
 </body>
 </html>
