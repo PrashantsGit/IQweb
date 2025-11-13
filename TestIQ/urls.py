@@ -20,15 +20,16 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings # New Import!
 from django.conf.urls.static import static # New Import!
+from django.shortcuts import render
+
+def landing_page(request):
+    return render(request, "quizzes/landing.html")
 
 urlpatterns = [
+    path('', landing_page, name='landing'),            # <-- HOMEPAGE
+    path('', include('quizzes.urls')),                 
+    path('accounts/', include('django.contrib.auth.urls')),
     path('admin/', admin.site.urls),
-    
-    # 1. Built-in Authentication URLs (for login, logout, etc.)
-    path('accounts/', include('django.contrib.auth.urls')), 
-    
-    # 2. Map the root URL (/) to the quizzes app
-    path('', include('quizzes.urls')),
 ]
 
 # 3. Serving media files during development (Crucial for question images)
