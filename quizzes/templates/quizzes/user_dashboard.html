@@ -1,183 +1,213 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ request.user.username }}'s Dashboard</title>
+{% extends "quizzes/base.html" %}
+{% block title %}Dashboard{% endblock %}
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+{% block extra_css %}
+<style>
+/* Fade-in animations */
+.fade-up {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all .7s ease-out;
+}
+.fade-up.show {
+    opacity: 1;
+    transform: translateY(0);
+}
 
-    <style>
-        body {
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            color: #333;
-            font-family: 'Poppins', sans-serif;
-            padding-top: 40px;
-        }
+/* Glass cards */
+.glass-box {
+    background: rgba(255,255,255,0.22);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 8px 35px rgba(0,0,0,0.15);
+}
 
-        .dashboard-container {
-            background: #fff;
-            border-radius: 1rem;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-            padding: 2.5rem;
-            width: 90%;
-            max-width: 900px;
-        }
+/* Stat widgets */
+.stat-card {
+    background: rgba(255,255,255,0.28);
+    border-radius: 18px;
+    padding: 18px;
+    text-align: center;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+}
 
-        h1 {
-            text-align: center;
-            font-weight: 600;
-            margin-bottom: 1rem;
-        }
+.stat-icon {
+    font-size: 45px;
+    margin-bottom: 10px;
+}
 
-        h2 {
-            color: #2575fc;
-            font-size: 1.3rem;
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-        }
+/* Category bars */
+.category-bar {
+    height: 12px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+}
+.category-container {
+    background: rgba(255,255,255,0.3);
+    border-radius: 8px;
+    padding: 8px 12px;
+}
 
-        .average-score {
-            text-align: center;
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
-        }
+/* History table */
+.table thead {
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    color: white;
+}
 
-        .average-score span {
-            color: #2575fc;
-            font-weight: 600;
-        }
+</style>
+{% endblock %}
 
-        table {
-            width: 100%;
-        }
+{% block content %}
+<div class="container py-5">
 
-        thead {
-            background-color: #2575fc;
-            color: white;
-        }
+    <!-- HEADER -->
+    <div class="fade-up">
+        <h2 class="fw-bold mb-2">Hello, {{ request.user.username }} 👋</h2>
+        <p class="text-muted">Here are your latest IQ insights & activity.</p>
+    </div>
 
-        tbody tr:hover {
-            background-color: #f7f9ff;
-        }
+    <!-- STAT WIDGETS -->
+    <div class="row g-4 mt-2 fade-up">
 
-        td, th {
-            text-align: center;
-            vertical-align: middle;
-        }
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon">🧠</div>
+                <h4>{{ average_score }}%</h4>
+                <p class="text-muted">Overall Accuracy</p>
+            </div>
+        </div>
 
-        .btn-view {
-            background-color: #2575fc;
-            color: white;
-            border-radius: 0.5rem;
-            padding: 0.3rem 0.8rem;
-            text-decoration: none;
-        }
+        {% if completed_attempts %}
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <h4>{{ completed_attempts.last.iq_score }}</h4>
+                <p class="text-muted">Latest IQ Score</p>
+            </div>
+        </div>
 
-        .btn-view:hover {
-            background-color: #1a5fd8;
-            color: white;
-        }
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon">⏳</div>
+                <h4>{{ completed_attempts|length }}</h4>
+                <p class="text-muted">Tests Completed</p>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-md-8">
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <h4>No Tests Yet</h4>
+                <p class="text-muted">Start your first test now!</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
 
-        .no-tests {
-            text-align: center;
-            margin-top: 2rem;
-            font-size: 1.1rem;
-        }
+    <!-- IQ Progress Graph -->
+    {% if iq_scores %}
+    <div class="glass-box mt-5 fade-up">
+        <h4 class="mb-3">IQ Progress Over Time</h4>
+        <canvas id="iqChart" height="100"></canvas>
+    </div>
+    {% endif %}
 
-        .btn-start, .btn-logout {
-            display: inline-block;
-            border: none;
-            background-color: #2575fc;
-            color: white;
-            border-radius: 0.5rem;
-            padding: 0.5rem 1rem;
-            text-decoration: none;
-            margin: 10px 5px;
-            font-weight: 500;
-            cursor: pointer;
-        }
+    <!-- CATEGORY BREAKDOWN (Future-ready) -->
+    {% if category_scores %}
+    <div class="glass-box mt-5 fade-up">
+        <h4 class="mb-3">Category Breakdown</h4>
 
-        .btn-logout {
-            background-color: #dc3545;
-        }
+        {% for name, value in category_scores.items %}
+        <div class="mb-3 category-container">
+            <strong>{{ name }}</strong>
+            <div class="mt-2" style="background: rgba(255,255,255,0.3); border-radius: 6px;">
+                <div class="category-bar" style="width: {{ value }}%;"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
-        .btn-start:hover {
-            background-color: #1a5fd8;
-        }
-
-        .btn-logout:hover {
-            background-color: #c82333;
-        }
-
-        .actions {
-            text-align: center;
-            margin-top: 2rem;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="dashboard-container">
-        <h1>Welcome, {{ request.user.username }}!</h1>
-
-        <p class="average-score">Overall Average Score: <span>{{ average_score }}%</span></p>
-
-        <hr>
-
-        <h2>Test History</h2>
+    <!-- TEST HISTORY -->
+    <div class="glass-box mt-5 fade-up">
+        <h4 class="mb-3">Test History</h4>
 
         {% if completed_attempts %}
             <div class="table-responsive">
-                <table class="table table-bordered align-middle">
+                <table class="table align-middle text-center">
                     <thead>
                         <tr>
-                            <th>Test Name</th>
+                            <th>Test</th>
                             <th>Score (%)</th>
-                            <th>Date Taken</th>
+                            <th>IQ</th>
+                            <th>Date</th>
                             <th>Details</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         {% for attempt in completed_attempts %}
                         <tr>
                             <td>{{ attempt.test.title }}</td>
-                            <td><strong>{{ attempt.score }}%</strong></td>
+                            <td>{{ attempt.score }}%</td>
+                            <td>{{ attempt.iq_score }}</td>
                             <td>{{ attempt.end_time|date:"M j, Y H:i" }}</td>
                             <td>
-                                <a href="{% url 'test_submit' attempt_id=attempt.pk %}" class="btn-view">View Results</a>
+                                <a href="{% url 'test_submit' attempt.pk %}" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
                             </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+
         {% else %}
-            <p class="no-tests">
-                You haven’t completed any tests yet.<br>
-                <a href="{% url 'test_list' %}" class="btn-start mt-2">Start a Test Now</a>
-            </p>
+            <p>No tests completed yet.</p>
         {% endif %}
-
-        <div class="actions">
-            <a href="{% url 'test_list' %}" class="btn-start">Take Another Test</a>
-
-            <form method="POST" action="{% url 'logout' %}" style="display: inline;">
-                {% csrf_token %}
-                <button type="submit" class="btn-logout">Logout</button>
-            </form>
-        </div>
     </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<footer>
-  &copy; {% now "Y" %} IQ Test Platform | Sharpen your intelligence every day 🧠
-</footer>
+</div>
+{% endblock %}
 
-</body>
-</html>
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Fade animation
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".fade-up").forEach(el => el.classList.add("show"));
+});
+
+// IQ Chart
+{% if iq_scores %}
+new Chart(document.getElementById("iqChart"), {
+    type: 'line',
+    data: {
+        labels: {{ iq_labels|safe }},
+        datasets: [{
+            label: 'IQ Score',
+            data: {{ iq_scores|safe }},
+            borderColor: '#2575fc',
+            backgroundColor: 'rgba(37,117,252,0.2)',
+            borderWidth: 3,
+            pointBackgroundColor: '#2575fc',
+            tension: 0.3
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: { beginAtZero: false }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

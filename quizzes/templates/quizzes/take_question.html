@@ -1,180 +1,339 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Question {{ question_num }} of {{ total_questions }}</title>
+{% extends "quizzes/base.html" %}
+{% block title %}Question {{ question_num }} of {{ total_questions }}{% endblock %}
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+{% block extra_css %}
+<style>
+    /* Smooth fade transition */
+.fade-question {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity .45s ease, transform .45s ease;
+}
+.fade-question.hide {
+    opacity: 0;
+    transform: translateY(20px);
+}
 
-    <style>
-        body {
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-            font-family: 'Poppins', sans-serif;
-            min-height: 100vh;
-        }
+/* Page layout */
+.container-card {
+  max-width: 900px;
+  margin: 28px auto;
+}
 
-        .question-container {
-            max-width: 700px;
-            margin: 3rem auto;
-            background: white;
-            border-radius: 1rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            padding: 2rem 2.5rem;
-        }
+/* Glass panel */
+.panel {
+  background: rgba(255,255,255,0.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 10px 30px rgba(2,6,23,0.12);
+}
 
-        .timer-box {
-            text-align: right;
-            font-weight: 500;
-            color: #fff;
-            background: rgba(255,255,255,0.1);
-            padding: 0.75rem 1rem;
-            border-radius: 0.5rem;
-            margin: 1rem;
-        }
+/* Top bar (timer + progress) */
+.top-row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom: 14px;
+}
+.timer-badge {
+  background: linear-gradient(135deg,#ff7a7a,#ffb86b);
+  color: white;
+  padding:8px 12px;
+  border-radius: 999px;
+  font-weight:700;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+.progress-wrap {
+  flex:1;
+  margin-left: 12px;
+}
 
-        h1, h2 {
-            color: #333;
-            text-align: center;
-        }
+/* Question area */
+.question-text {
+  font-size: 1.15rem;
+  font-weight:600;
+  margin-bottom: 14px;
+  color: #0b1220;
+}
 
-        .progress {
-            height: 10px;
-            border-radius: 5px;
-            margin-bottom: 1rem;
-        }
+/* Image (if present) */
+.question-image {
+  width:100%;
+  max-height: 320px;
+  object-fit: contain;
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 10px;
+  border: 1px solid rgba(0,0,0,0.04);
+  margin-bottom: 16px;
+}
 
-        .form-check-label {
-            font-size: 1.05rem;
-            cursor: pointer;
-        }
+/* Answers grid */
+.answers-grid {
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+  margin-top: 12px;
+}
 
-        .btn-next {
-            background-color: #2575fc;
-            color: white;
-            font-weight: 600;
-            border: none;
-            border-radius: 0.5rem;
-            padding: 0.7rem 1.5rem;
-            margin-top: 1.5rem;
-            transition: background 0.2s;
-        }
+/* Stylized radio button tiles */
+.answer-tile {
+  display:flex;
+  gap:12px;
+  align-items:center;
+  padding:12px 14px;
+  border-radius:12px;
+  background: rgba(255,255,255,0.9);
+  box-shadow: 0 6px 18px rgba(2,6,23,0.06);
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease;
+  border: 2px solid transparent;
+}
+.answer-tile:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(2,6,23,0.08); }
+.answer-tile input[type="radio"] {
+  width:18px;
+  height:18px;
+  accent-color: #2575fc;
+}
+.answer-tile.selected {
+  border-color: rgba(37,117,252,0.35);
+  box-shadow: 0 14px 40px rgba(37,117,252,0.08);
+}
 
-        .btn-next:hover {
-            background-color: #1b5ed9;
-        }
+/* Submit area */
+.actions {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:18px;
+  gap:12px;
+}
+.btn-primary {
+  background: linear-gradient(135deg,#6a11cb,#2575fc);
+  border: none;
+}
+.btn-ghost {
+  background: transparent;
+  color: #2575fc;
+  border: 1px solid rgba(37,117,252,0.12);
+  padding: 8px 14px;
+  border-radius: 10px;
+}
 
-        img.question-image {
-            display: block;
-            margin: 1rem auto;
-            border-radius: 0.5rem;
-            max-width: 100%;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-    </style>
-</head>
-<body>
+/* small screens tweaks */
+@media (max-width: 720px) {
+  .top-row { flex-direction: column; align-items: stretch; }
+  .progress-wrap { margin-left: 0; margin-top: 8px; }
+  .answer-tile { padding: 10px; }
+}
+</style>
+{% endblock %}
 
-    <!-- Timer Section -->
-    <div class="timer-box">
-        ⏱ Time Remaining: <span id="timer">{{ remaining_time }}</span> seconds
-    </div>
+{% block content %}
+<div class="container container-card">
+  <div class="panel">
 
-    <div class="question-container">
-        <h1>{{ attempt.test.title }}</h1>
-        <h2>Question {{ question_num }} of {{ total_questions }}</h2>
-
-        <!-- Progress Bar -->
-        <div class="progress">
-            <div class="progress-bar bg-primary" role="progressbar"
-                 style="width: {{ progress_percent }}%;"
-                 aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+    <!-- Top row: progress + timer -->
+    <div class="top-row">
+      <div style="min-width:140px;">
+        <div class="timer-badge" id="timerBadge" aria-live="polite" title="Time remaining">
+          ⏱ <span id="timer">{{ remaining_time }}</span>s
         </div>
-        <p class="text-center text-muted mb-4">{{ progress_percent }}% complete</p>
+      </div>
 
-        <!-- Question Form -->
-        <form method="POST">
-            {% csrf_token %}
-            
-            <h4 class="mb-3">{{ question.text }}</h4>
-
-            {% if question.image %}
-                <img src="{{ question.image.url }}" alt="Question Image" class="question-image">
-            {% endif %}
-
-            {% if question.question_type == 'MC' %}
-                {% for answer in answers %}
-                    <div class="form-check mb-2">
-                        <input class="form-check-input" type="radio" id="answer-{{ answer.pk }}" name="answer" value="{{ answer.pk }}" required>
-                        <label class="form-check-label" for="answer-{{ answer.pk }}">{{ answer.text }}</label>
-                    </div>
-                {% endfor %}
-            
-            {% elif question.question_type == 'LG' %}
-                <div class="mb-3">
-                    <textarea class="form-control" name="text_input" rows="5" placeholder="Enter your answer here..."></textarea>
-                </div>
-
-            {% else %}
-                <div class="alert alert-warning">
-                    Unsupported question type: {{ question.get_question_type_display }}
-                </div>
-            {% endif %}
-
-            <div class="text-center">
-                <button type="submit" class="btn-next">Submit & Continue →</button>
-            </div>
-        </form>
+      <div class="progress-wrap">
+        <div class="d-flex justify-content-between mb-1">
+          <small class="text-muted">Question {{ question_num }} of {{ total_questions }}</small>
+          <small class="text-muted">{{ progress_percent }}% complete</small>
+        </div>
+        <div class="progress" style="height:10px; border-radius:8px;">
+          <div class="progress-bar" role="progressbar" style="width: {{ progress_percent }}%;" aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+      </div>
     </div>
 
-    <!-- Footer -->
-    <p class="text-center text-light mt-4">IQ Test Platform © {{ now|date:"Y" }}</p>
+    <!-- Test title -->
+    <div class="mb-3">
+      <h4 style="margin:0; color:#0b1220;">{{ attempt.test.title }}</h4>
+    </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <hr>
 
-    <!-- Timer Script -->
-    <script>
-    // Persistent timer using sessionStorage
-    const timerDisplay = document.getElementById('timer');
-    const totalTime = {{ remaining_time }}; // from backend (seconds)
-    const testKey = "timer_{{ attempt.id }}"; // unique key for this attempt
+    <!-- Question -->
+    <div id="questionContainer" class="fade-question">
 
-    // Load previous remaining time if exists
-    let timeLeft = sessionStorage.getItem(testKey)
-        ? parseInt(sessionStorage.getItem(testKey))
-        : totalTime;
+      <p class="question-text">{{ question.text }}</p>
 
-    function updateTimer() {
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            alert("⏰ Time's up! Submitting your test automatically.");
-            window.location.href = "{% url 'test_submit' attempt_id=attempt.pk %}";
-            return;
-        }
+      {% if question.image %}
+        <img src="{{ question.image.url }}" alt="Question image" class="question-image">
+      {% endif %}
 
-        // Display minutes and seconds
-        const minutes = Math.floor(timeLeft / 60);
-        const seconds = timeLeft % 60;
-        timerDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+      <form method="POST" id="answerForm">
+        {% csrf_token %}
 
-        // Save remaining time every tick
-        sessionStorage.setItem(testKey, timeLeft);
+        <div class="answers-grid" role="radiogroup" aria-labelledby="questionLabel">
+          {% if question.question_type == 'MC' %}
+            {% for answer in answers %}
+            <label class="answer-tile" tabindex="0">
+              <input type="radio" name="answer" value="{{ answer.pk }}" aria-checked="false" required>
+              <div style="flex:1;">
+                {{ answer.text }}
+              </div>
+            </label>
+            {% endfor %}
+          {% elif question.question_type == 'LG' %}
+            <textarea name="text_input" class="form-control" rows="5" placeholder="Type your answer here..." required></textarea>
+          {% else %}
+            <p class="text-muted">Unsupported question type: {{ question.get_question_type_display }}</p>
+          {% endif %}
+        </div>
 
-        timeLeft -= 1;
+        <!-- Actions -->
+        <div class="actions">
+          <a href="{% url 'test_list' %}" class="btn btn-ghost">Exit Test</a>
+
+          <div style="display:flex; gap:8px;">
+            <button type="submit" id="submitBtn" class="btn btn-primary">Submit & Continue</button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/*
+Client-side timer sync and auto-submit behavior.
+
+- `remaining_time` is provided server-side (seconds).
+- This script displays countdown and automatically submits (redirects) when time hits zero.
+- Also provides UI selection feedback for radio tiles and keyboard accessibility.
+*/
+// Animated transition on submit
+const qContainer = document.getElementById("questionContainer");
+const formElement = document.getElementById("answerForm");
+
+formElement.addEventListener("submit", function(e) {
+    e.preventDefault();  // stop form for a moment
+
+    disableForm(); // from previous script (prevents double submit)
+
+    // Animate out
+    qContainer.classList.add("hide");
+
+    // Wait for animation to finish, then submit
+    setTimeout(() => {
+        formElement.submit();
+    }, 450); // matches CSS transition time
+});
+
+// Fade-in on load
+setTimeout(() => {
+    qContainer.classList.remove("hide");
+}, 50);
+
+
+document.addEventListener("DOMContentLoaded", function() {
+  // ---------- TIMER ----------
+  const timerEl = document.getElementById("timer");
+  let timeLeft = parseInt(timerEl.textContent || "0", 10);
+
+  // reference to attempt submit URL (use direct redirect to test_submit when time up)
+  const submitRedirectUrl = "{% url 'test_submit' attempt_id=attempt.pk %}";
+
+  function tick() {
+    if (timeLeft <= 0) {
+      // time's up → redirect to submission (server will finalize)
+      // disable form controls first
+      disableForm();
+      window.location.href = submitRedirectUrl;
+      return;
     }
+    timeLeft -= 1;
+    timerEl.textContent = timeLeft;
+  }
 
-    const timerInterval = setInterval(updateTimer, 1000);
+  // run immediately and then every second
+  setInterval(tick, 1000);
 
-    // Save progress before navigating away
-    window.addEventListener("beforeunload", () => {
-        sessionStorage.setItem(testKey, timeLeft);
+  // ---------- RADIO TILE SELECT VISUALS ----------
+  const tiles = document.querySelectorAll(".answer-tile");
+  tiles.forEach(tile => {
+    const radio = tile.querySelector('input[type="radio"]');
+
+    // clicking/tapping the whole tile selects the radio
+    tile.addEventListener("click", (e) => {
+      // allow clicking on internal links or inputs naturally
+      if (e.target.tagName.toLowerCase() === 'a') return;
+      radio.checked = true;
+      updateSelectionVisuals();
     });
+
+    // keyboard accessibility: Enter/Space selects
+    tile.addEventListener("keydown", (e) => {
+      if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        radio.checked = true;
+        updateSelectionVisuals();
+        // focus the radio for screen readers
+        radio.focus();
+      }
+    });
+  });
+
+  function updateSelectionVisuals() {
+    tiles.forEach(tile => {
+      const radio = tile.querySelector('input[type="radio"]');
+      if (radio.checked) tile.classList.add("selected");
+      else tile.classList.remove("selected");
+    });
+  }
+
+  // initialize visuals on page load
+  updateSelectionVisuals();
+
+  // bind change event so if user uses keyboard to change, UI updates
+  document.querySelectorAll('.answer-tile input[type="radio"]').forEach(r => {
+    r.addEventListener('change', updateSelectionVisuals);
+  });
+
+  // ---------- PREVENT DOUBLE SUBMIT ----------
+  const form = document.getElementById("answerForm");
+  const submitBtn = document.getElementById("submitBtn");
+
+  function disableForm() {
+    // disable all inputs to prevent strange behavior
+    form.querySelectorAll("input, textarea, button").forEach(el => el.disabled = true);
+    submitBtn.classList.add("disabled");
+  }
+
+  form.addEventListener("submit", (e) => {
+    // Basic client-side check: ensure an answer is selected if MC
+    const qType = "{{ question.question_type }}";
+    if (qType === 'MC') {
+      const selected = form.querySelector('input[name="answer"]:checked');
+      if (!selected) {
+        e.preventDefault();
+        alert("Please select an answer before continuing.");
+        return;
+      }
+    }
+    // On submit, disable form to prevent double-submits
+    disableForm();
+    // allow form to submit normally (server-side will handle redirect to next question or results)
+  });
+
+  // ---------- SAFETY: re-sync with server time if user is inactive for long ----------
+  // (Optional) You could implement periodic small pings to server to re-check remaining time.
+  // For now, the server-side check in take_question() will enforce auto-submit if the user manipulates time.
+
+});
 </script>
-
-    <footer>
-  &copy; {% now "Y" %} IQ Test Platform | Sharpen your intelligence every day 🧠
-</footer>
-
-</body>
-</html>
+{% endblock %}

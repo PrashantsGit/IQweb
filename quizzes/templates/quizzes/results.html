@@ -1,176 +1,342 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Test Results - IQ Platform</title>
+{% extends "quizzes/base.html" %}
+{% block title %}Test Results - {{ attempt.test.title }}{% endblock %}
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+{% block extra_css %}
+<style>
+/* Page layout */
+.container-results {
+  max-width: 980px;
+  margin: 36px auto;
+  padding: 0 16px;
+}
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+/* Results card */
+.results-panel {
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 14px 40px rgba(2,6,23,0.12);
+}
 
-    <style>
-        body {
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-            font-family: 'Poppins', sans-serif;
-            color: #333;
-            padding-top: 50px;
-            min-height: 100vh;
-        }
-        .result-container {
-            background: #fff;
-            border-radius: 1.2rem;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-            padding: 2.5rem;
-            width: 90%;
-            max-width: 950px;
-            margin: 0 auto;
-        }
-        h1, h2, h3 {
-            text-align: center;
-            font-weight: 600;
-        }
-        .summary {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        .summary p {
-            font-size: 1.2rem;
-        }
-        .highlight {
-            color: #2575fc;
-            font-weight: 700;
-        }
-        .chart-container {
-            width: 100%;
-            max-width: 700px;
-            margin: 0 auto;
-        }
-        .btn-dashboard {
-            display: block;
-            width: fit-content;
-            margin: 30px auto 0;
-            background-color: #2575fc;
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            padding: 0.7rem 1.5rem;
-            font-weight: 500;
-            text-decoration: none;
-        }
-        .btn-dashboard:hover {
-            background-color: #1a5fd8;
-            color: white;
-        }
-    </style>
-</head>
-<body>
+/* Top summary */
+.summary-row {
+  display:flex;
+  gap:20px;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+}
+.summary-left {
+  flex: 1 1 360px;
+}
+.summary-right {
+  flex: 0 1 360px;
+  text-align:center;
+}
 
-<div class="result-container">
-    <h1>Test Results</h1>
-    <hr>
+/* Stats */
+.stat {
+  display:flex;
+  gap:14px;
+  align-items:center;
+}
+.stat .num {
+  font-size:1.6rem;
+  font-weight:700;
+}
+.small-muted { color: rgba(255,255,255,0.85); }
 
-    {% if attempt.is_completed %}
-        <div class="summary">
-            <h2>{{ attempt.test.title }}</h2>
-            <p>Completion Time: <strong>{{ attempt.end_time|date:"H:i:s, F j, Y" }}</strong></p>
-            <p>You answered <span class="highlight">{{ correct_count }}</span> out of <span class="highlight">{{ total_questions }}</span> questions correctly.</p>
-            <p>Final Score: <span class="highlight">{{ score_percentage|floatformat:1 }}%</span></p>
-            <h3 class="mt-4">Your Estimated IQ: <span class="highlight">{{ iq_score }}</span></h3>
-        </div>
+/* Gauge container */
+.gauge-wrap {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding: 8px;
+}
 
-        {% if category_results %}
-        <hr>
-        <h3>Category-wise IQ Breakdown</h3>
+/* Category table */
+.table-cats th {
+  background: linear-gradient(135deg,#6a11cb,#2575fc);
+  color: white;
+}
+.cat-iq {
+  font-weight:700;
+}
 
-        <div class="table-responsive mt-3">
-          <table class="table table-bordered align-middle">
-            <thead class="table-primary text-center">
-              <tr>
-                <th>Category</th>
-                <th>Total</th>
-                <th>Correct</th>
-                <th>Estimated IQ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for cat in category_results %}
-              <tr class="text-center">
-                <td>{{ cat.name }}</td>
-                <td>{{ cat.total }}</td>
-                <td>{{ cat.correct }}</td>
-                <td><strong>{{ cat.iq }}</strong></td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+/* Radar chart */
+.chart-box {
+  max-width: 540px;
+  margin: 0 auto;
+}
 
-        <!-- Radar Chart Section -->
-        <div class="chart-container mt-5">
-            <canvas id="iqChart" height="300"></canvas>
-        </div>
+/* Buttons */
+.actions {
+  display:flex;
+  gap:12px;
+  justify-content:center;
+  margin-top:18px;
+  flex-wrap:wrap;
+}
+.btn-ghost {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 10px 16px;
+  border-radius: 10px;
+}
+
+/* Responsive */
+@media (max-width: 880px) {
+  .summary-row { flex-direction: column; align-items:stretch; }
+  .summary-right { order: -1; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-results">
+  <div class="results-panel">
+
+    <div class="summary-row">
+      <!-- Left: textual summary -->
+      <div class="summary-left">
+        <h3 class="mb-1">{{ attempt.test.title }}</h3>
+        {% if attempt.is_completed %}
+          <p class="small-muted">Completed on <strong>{{ attempt.end_time|date:"H:i:s, F j, Y" }}</strong></p>
         {% endif %}
 
-        <div class="text-center mt-5">
-            <p>Your results have been saved to your dashboard.</p>
-            <a href="{% url 'user_dashboard' %}" class="btn-dashboard">Go to Dashboard</a>
+        <div class="mt-3">
+          <div class="stat mb-2">
+            <div class="num">{{ correct_count }}</div>
+            <div>
+              <div class="small-muted">Correct answers</div>
+              <div class="small-muted">{{ total_questions }} questions total</div>
+            </div>
+          </div>
+
+          <div class="stat">
+            <div class="num">{{ score_percentage|floatformat:1 }}%</div>
+            <div>
+              <div class="small-muted">Final score</div>
+              <div class="small-muted">Accuracy & speed combined</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Gauge -->
+      <div class="summary-right">
+        <div class="gauge-wrap">
+          <!-- SVG Speedometer Gauge -->
+          <svg id="iqGauge" width="320" height="200" viewBox="0 0 320 200" aria-label="IQ gauge">
+            <!-- Background arc -->
+            <defs>
+              <linearGradient id="g1" x1="0" x2="1">
+                <stop offset="0%" stop-color="#6a11cb" />
+                <stop offset="100%" stop-color="#2575fc" />
+              </linearGradient>
+              <linearGradient id="g2" x1="0" x2="1">
+                <stop offset="0%" stop-color="#22c55e" />
+                <stop offset="100%" stop-color="#3b82f6" />
+              </linearGradient>
+            </defs>
+
+            <!-- outer semicircle background -->
+            <path d="M20 170 A140 140 0 0 1 300 170" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="26" stroke-linecap="round"/>
+            <!-- colored arc (animated stroke-dasharray) -->
+            <path id="gaugeArc" d="M20 170 A140 140 0 0 1 300 170" fill="none" stroke="url(#g1)" stroke-width="26" stroke-linecap="round" stroke-dasharray="0,1000"/>
+
+            <!-- ticks -->
+            {% for t in "60,70,80,90,100,110,120,130,140,150,160".split(',') %}
+              {% with val=t|add:0 %}
+                {% comment %} Convert val to angle and coordinates {% endcomment %}
+                {% with angle=((val|float - 60) / 100.0) * 180.0 %}
+                  {% with rad=angle|float|floatformat:6 %}
+                    {% comment %} We'll draw ticks with CSS/JS for precision; keep SVG clean {% endcomment %}
+                  {% endwith %}
+                {% endwith %}
+              {% endwith %}
+            {% endfor %}
+
+            <!-- center label background -->
+            <circle cx="160" cy="140" r="44" fill="rgba(0,0,0,0.25)"/>
+            <text id="gaugeIQ" x="160" y="138" text-anchor="middle" font-size="20" fill="#fff" font-weight="700">{{ iq_score }}</text>
+            <text x="160" y="158" text-anchor="middle" font-size="12" fill="rgba(255,255,255,0.8)">Estimated IQ</text>
+          </svg>
         </div>
 
-    {% else %}
-        <div class="alert alert-warning text-center">
-            <p>This test attempt is still marked as incomplete. Please retake the test.</p>
+        <div class="mt-2 small-muted">IQ Score (scaled): <strong>{{ iq_score }}</strong></div>
+      </div>
+    </div>
+
+    <hr style="border-color: rgba(255,255,255,0.06); margin: 20px 0;">
+
+    <!-- Insights & category breakdown -->
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="p-3" style="background: rgba(255,255,255,0.05); border-radius:12px;">
+          <h5>Performance Insights</h5>
+          <p class="small-muted">
+            {% if total_questions %}
+              Accuracy: <strong>{{ score_percentage|floatformat:1 }}%</strong> • You got <strong>{{ correct_count }}</strong> out of <strong>{{ total_questions }}</strong> correct.
+            {% else %}
+              No scoring data available.
+            {% endif %}
+          </p>
+
+          <ul class="small-muted">
+            <li>Time taken: <strong>{{ attempt.end_time|default:"-" }}</strong> <!-- replace with actual time if tracked --></li>
+            <li>Comparison to average: <strong>Above average</strong> <!-- placeholder: compute later --></li>
+          </ul>
+
+          <div class="actions" style="justify-content:flex-start; margin-top:12px;">
+            <a href="{% url 'user_dashboard' %}" class="btn btn-primary">Go to Dashboard</a>
+            <a href="{% url 'test_start' attempt.test.pk %}" class="btn btn-ghost">Retake Test</a>
+            <a href="{% url 'download_certificate' attempt_id=attempt.pk %}" class="btn btn-ghost">Download Certificate</a>
+          </div>
         </div>
-    {% endif %}
+      </div>
+
+      <div class="col-md-6">
+        <div class="p-3" style="background: rgba(255,255,255,0.05); border-radius:12px;">
+          <h5>Category Breakdown</h5>
+
+          {% if category_results %}
+            <div class="table-responsive mt-2">
+              <table class="table table-sm table-cats">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Correct</th>
+                    <th>Total</th>
+                    <th>Estimated IQ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for cat in category_results %}
+                  <tr>
+                    <td>{{ cat.name }}</td>
+                    <td>{{ cat.correct }}</td>
+                    <td>{{ cat.total }}</td>
+                    <td class="cat-iq">{{ cat.iq }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Radar Chart (visual) -->
+            <div class="chart-box mt-3">
+              <canvas id="radarChart" height="220"></canvas>
+            </div>
+          {% else %}
+            <p class="small-muted">No category breakdown available.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
 </div>
+{% endblock %}
 
-<!-- Radar Chart Script -->
+{% block extra_js %}
+<!-- Chart.js for radar -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-{% if category_results %}
-const ctx = document.getElementById('iqChart');
-new Chart(ctx, {
-  type: 'radar',
-  data: {
-    labels: [{% for c in category_results %}'{{ c.name }}',{% endfor %}],
-    datasets: [{
-      label: 'Estimated IQ by Category',
-      data: [{% for c in category_results %}{{ c.iq }},{% endfor %}],
-      fill: true,
-      backgroundColor: 'rgba(37, 117, 252, 0.2)',
-      borderColor: '#2575fc',
-      pointBackgroundColor: '#2575fc',
-      pointBorderColor: '#fff',
-      pointHoverBackgroundColor: '#fff',
-      pointHoverBorderColor: '#2575fc'
-    }]
-  },
-  options: {
-    scales: {
-      r: {
-        min: 60,
-        max: 160,
-        ticks: {
-          stepSize: 20,
-          color: '#555'
-        },
-        grid: { color: 'rgba(0,0,0,0.1)' },
-        pointLabels: {
-          font: { size: 14 },
-          color: '#333'
-        }
-      }
-    },
-    plugins: {
-      legend: { display: false },
-      tooltip: { enabled: true }
-    }
+(function() {
+  // Animate the SVG gauge arc to the IQ value.
+  const gaugeArc = document.getElementById('gaugeArc');
+  const gaugeIQtext = document.getElementById('gaugeIQ');
+  const targetIQ = parseFloat("{{ iq_score|default:100 }}");
+  // Gauge mapping:
+  // IQ min = 60, max = 160 -> map to 0..1 (0 = leftmost, 1 = rightmost)
+  const minIQ = 60;
+  const maxIQ = 160;
+  const clamped = Math.max(minIQ, Math.min(maxIQ, targetIQ));
+  const ratio = (clamped - minIQ) / (maxIQ - minIQ); // 0..1
+  // total arc length of semicircle path (approx) - we'll animate via stroke-dasharray
+  // A reliable trick: compute path length via getTotalLength()
+  function animateArc() {
+    const pathLen = gaugeArc.getTotalLength();
+    const displayLen = pathLen * ratio;
+    gaugeArc.style.transition = 'stroke-dasharray 1200ms cubic-bezier(.2,.9,.2,1)';
+    // set dasharray to "displayLen pathLen"
+    gaugeArc.style.strokeDasharray = displayLen + ' ' + pathLen;
   }
-});
-{% endif %}
-</script>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+  // Update center text with small counter animation
+  function animateCounter() {
+    const start = 60;
+    const end = clamped;
+    const duration = 1100;
+    let startTime = null;
+    function step(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      const current = Math.round(start + (end - start) * progress);
+      gaugeIQtext.textContent = current;
+      if (progress < 1) window.requestAnimationFrame(step);
+      else gaugeIQtext.textContent = end; // final value
+    }
+    window.requestAnimationFrame(step);
+  }
+
+  // Run animation once DOM ready
+  document.addEventListener('DOMContentLoaded', () => {
+    // Prepare arc for animation
+    const pathLen = gaugeArc.getTotalLength();
+    gaugeArc.style.strokeDasharray = '0 ' + pathLen;
+    gaugeArc.style.strokeDashoffset = '0';
+    // Trigger after short delay
+    setTimeout(() => {
+      animateArc();
+      animateCounter();
+    }, 200);
+  });
+
+  // Radar chart if category_results exist
+  {% if category_results %}
+  const ctx = document.getElementById('radarChart').getContext('2d');
+  const labels = [{% for c in category_results %}'{{ c.name }}'{% if not forloop.last %}, {% endif %}{% endfor %}];
+  const dataPoints = [{% for c in category_results %}{{ c.iq }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+
+  new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Category IQ',
+        data: dataPoints,
+        fill: true,
+        backgroundColor: 'rgba(37,117,252,0.2)',
+        borderColor: '#2575fc',
+        pointBackgroundColor: '#2575fc',
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: '#2575fc'
+      }]
+    },
+    options: {
+      scales: {
+        r: {
+          min: 60,
+          max: 160,
+          ticks: {
+            stepSize: 20
+          }
+        }
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+  {% endif %}
+
+})();
+</script>
+{% endblock %}

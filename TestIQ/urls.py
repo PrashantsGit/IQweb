@@ -1,37 +1,38 @@
-"""
-URL configuration for TestIQ project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-# iq_test_site/urls.py
+# TestIQ/urls.py
 
 from django.contrib import admin
 from django.urls import path, include
-from django.conf import settings # New Import!
-from django.conf.urls.static import static # New Import!
+from django.conf import settings
+from django.conf.urls.static import static
 from django.shortcuts import render
 
+from quizzes import views as quiz_views
+
+
+# Landing page view
 def landing_page(request):
     return render(request, "quizzes/landing.html")
 
+
 urlpatterns = [
-    path('', landing_page, name='landing'),            # <-- HOMEPAGE
-    path('', include('quizzes.urls')),                 
+    # Landing Page
+    path('', landing_page, name='landing'),
+
+    # Custom Auth Routes (use your custom templates)
+    path('login/', quiz_views.custom_login, name='login'),
+    path('register/', quiz_views.register, name='register'),
+
+    # Include Django's default auth (logout, password reset)
     path('accounts/', include('django.contrib.auth.urls')),
+
+    # Quizzes App URLs
+    path('', include('quizzes.urls')),
+
+    # Admin
     path('admin/', admin.site.urls),
 ]
 
-# 3. Serving media files during development (Crucial for question images)
+
+# Media (for images)
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

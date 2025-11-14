@@ -1,202 +1,157 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>IQ Test Platform</title>
+{% extends "quizzes/base.html" %}
+{% block title %}IQ Tests{% endblock %}
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+{% block extra_css %}
+<style>
+/* fade-up animation */
+.fade-up {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all .6s ease-out;
+}
+.fade-up.show {
+    opacity: 1;
+    transform: translateY(0);
+}
 
-    <style>
-        body {
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-            font-family: 'Poppins', sans-serif;
-            color: #333;
-        }
+/* test cards */
+.test-card {
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 25px;
+    transition: transform .25s ease, box-shadow .25s ease;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+.test-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 14px 35px rgba(0,0,0,0.20);
+}
 
-        /* Navbar */
-        .navbar {
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
+/* gradient header */
+.test-header {
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    padding: 16px;
+    border-radius: 14px;
+    color: white;
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.2rem;
+}
 
-        .navbar-brand {
-            font-weight: 700;
-            color: #2575fc !important;
-            letter-spacing: 0.5px;
-        }
+/* chips */
+.chip {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-size: 0.80rem;
+    font-weight: 500;
+    margin-right: 6px;
+}
+.chip-duration {
+    background: rgba(37,117,252,0.15);
+    color: #2575fc;
+}
+.chip-category {
+    background: rgba(255,255,255,0.25);
+    color: #fff;
+    backdrop-filter: blur(10px);
+}
 
-        .nav-link {
-            color: #333 !important;
-            font-weight: 500;
-            margin-left: 10px;
-        }
+/* description */
+.test-desc {
+    color: #444;
+    margin-top: 12px;
+}
 
-        .nav-link:hover {
-            color: #2575fc !important;
-        }
+/* start button bar */
+.start-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 18px;
+    padding: 12px;
+    background: rgba(0,0,0,0.05);
+    border-radius: 12px;
+}
+.start-btn {
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    border: none;
+    padding: 10px 16px;
+    border-radius: 12px;
+    color: white;
+    font-weight: 500;
+    transition: transform .2s ease;
+}
+.start-btn:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
 
-        .logout-btn {
-            color: #dc3545 !important;
-            border: none;
-            background: none;
-            font-weight: 500;
-            margin-left: 10px;
-            cursor: pointer;
-        }
+{% block content %}
+<div class="container py-5">
 
-        .logout-btn:hover {
-            color: #b02a37 !important;
-        }
+    <div class="fade-up text-center">
+        <h2 class="fw-bold">Available IQ Tests</h2>
+        <p class="text-muted">Choose a test to begin your IQ journey.</p>
+    </div>
 
-        .hero {
-            text-align: center;
-            color: white;
-            padding: 4rem 1rem 3rem;
-        }
+    {% if tests %}
+    <div class="row g-4 mt-4">
 
-        .hero h1 {
-            font-weight: 700;
-            font-size: 2.5rem;
-        }
+        {% for test in tests %}
+        <div class="col-md-6 col-lg-4 fade-up">
 
-        .hero p {
-            font-size: 1.1rem;
-            max-width: 600px;
-            margin: 1rem auto 0;
-        }
+            <div class="test-card">
 
-        .tests-section {
-            background-color: #fff;
-            border-radius: 2rem 2rem 0 0;
-            padding: 3rem 2rem;
-            box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.2);
-            margin-top: -2rem;
-        }
+                <div class="test-header">
+                    {{ test.title }}
+                </div>
 
-        .card {
-            border: none;
-            border-radius: 1rem;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-            transition: transform 0.2s ease;
-        }
+                <!-- Chips -->
+                <div class="mt-3">
+                    <span class="chip chip-duration">⏱ {{ test.duration }} min</span>
+                    <span class="chip chip-category">
+                        🧩 IQ Test
+                    </span>
+                </div>
 
-        .card:hover {
-            transform: translateY(-5px);
-        }
+                <p class="test-desc">
+                    {{ test.description|truncatechars:140 }}
+                </p>
 
-        .card-img-top {
-            height: 180px;
-            object-fit: cover;
-        }
+                <!-- Start Test Section -->
+                <div class="start-bar">
+                    <span class="text-muted" style="font-size: 0.9rem;">Ready when you are</span>
 
-        .card-title {
-            color: #2575fc;
-            font-weight: 600;
-        }
+                    <a href="{% url 'test_start' test.pk %}" class="start-btn">
+                        Start Test →
+                    </a>
+                </div>
 
-        .btn-start {
-            background-color: #2575fc;
-            color: white;
-            border-radius: 0.5rem;
-            padding: 0.5rem 1.2rem;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .btn-start:hover {
-            background-color: #1a5fd8;
-            color: white;
-        }
-
-        footer {
-            text-align: center;
-            color: #eee;
-            margin-top: 3rem;
-            padding-bottom: 2rem;
-            font-size: 0.9rem;
-        }
-    </style>
-</head>
-<body>
-
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'test_list' %}">🧠 IQ Test Platform</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                <ul class="navbar-nav align-items-center">
-                    {% if request.user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'user_dashboard' %}">Dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <form method="POST" action="{% url 'logout' %}" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="logout-btn">Logout</button>
-                            </form>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'register' %}">Sign Up</a>
-                        </li>
-                    {% endif %}
-                </ul>
             </div>
+
         </div>
-    </nav>
+        {% endfor %}
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <h1>Welcome to the IQ Test Platform</h1>
-        <p>Challenge your mind and measure your intelligence with engaging, timed IQ tests designed for all skill levels.</p>
-    </section>
+    </div>
 
-    <!-- Tests Section -->
-    <section class="tests-section container">
-        {% if tests %}
-            <div class="row g-4">
-                {% for test in tests %}
-                    <div class="col-md-6 col-lg-4">
-                        <div class="card">
-                            {% if test.image %}
-                                <img src="{{ test.image.url }}" class="card-img-top" alt="{{ test.title }}">
-                            {% else %}
-                                <img src="https://via.placeholder.com/400x180?text=IQ+Test" class="card-img-top" alt="IQ Test">
-                            {% endif %}
-                            <div class="card-body">
-                                <h5 class="card-title">{{ test.title }}</h5>
-                                <p class="card-text">{{ test.description|truncatechars:120 }}</p>
-                                <p><strong>Duration:</strong> {{ test.duration }} minutes</p>
-                                <a href="{% url 'test_start' test.pk %}" class="btn-start">Start Test</a>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="text-center py-5">
-                <h4>No tests are currently available.</h4>
-                <p>Please check back later!</p>
-            </div>
-        {% endif %}
-    </section>
+    {% else %}
+    <div class="fade-up text-center mt-5">
+        <h4>No tests available at the moment</h4>
+        <p class="text-muted">Please check back later.</p>
+    </div>
+    {% endif %}
 
-    <!-- Footer -->
-    <footer>
-  &copy; {% now "Y" %} IQ Test Platform | Sharpen your intelligence every day 🧠
-</footer>
+</div>
+{% endblock %}
 
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".fade-up").forEach(el => el.classList.add("show"));
+});
+</script>
+{% endblock %}

@@ -1,166 +1,206 @@
+# quizzes/views.py
+
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib import messages
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login as auth_login
 from django.contrib.auth.decorators import login_required
-from django.utils import timezone
-from .models import Test, Question, Answer, UserTestAttempt, UserAnswer
-import math
-from datetime import timedelta
+from django.http import HttpResponse
 from django.db.models import Q
-from collections import defaultdict
+
+from .models import Test, Question, Answer, UserTestAttempt, UserAnswer
+
+import math
+import datetime
+from datetime import timedelta
+from io import BytesIO
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.utils import ImageReader
+from reportlab.lib.colors import HexColor
 
 
+# -----------------------------
+# REGISTER VIEW
+# -----------------------------
 def register(request):
-    """
-    Handles user registration using Django's built-in UserCreationForm.
-    Redirects to login after success.
-    """
+    """Handles user account creation with your new register template."""
+
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            messages.success(request, f'Account created for {user.username}! You can now log in.')
+            messages.success(request, "Account created successfully! You may now log in.")
             return redirect('login')
         else:
             messages.error(request, "Please fix the errors below.")
     else:
         form = UserCreationForm()
 
-    return render(request, 'registration/register.html', {'form': form})
+    return render(request, "registration/register.html", {'form': form})
 
 
+# -----------------------------
+# CUSTOM LOGIN VIEW
+# -----------------------------
+def custom_login(request):
+    """Custom login page that loads your template instead of Django default."""
+
+    if request.method == "POST":
+        form = AuthenticationForm(request, data=request.POST)
+
+        if form.is_valid():
+            user = form.get_user()
+            auth_login(request, user)
+            return redirect('user_dashboard')
+        else:
+            messages.error(request, "Invalid username or password.")
+
+    else:
+        form = AuthenticationForm()
+
+    return render(request, "registration/login.html", {'form': form})
+
+
+# -----------------------------
+# TEST LIST PAGE
+# -----------------------------
 @login_required
 def test_list(request):
     tests = Test.objects.all()
-    return render(request, 'quizzes/test_list.html', {'tests': tests})
+    return render(request, "quizzes/test_list.html", {"tests": tests})
 
 
+# -----------------------------
+# START TEST
+# -----------------------------
 @login_required
-def test_start(request, pk):
-    test = get_object_or_404(Test, pk=pk)
-    attempt, created = UserTestAttempt.objects.get_or_create(user=request.user, test=test, is_completed=False)
-    first_question = Question.objects.filter(test=test).first()
-    return redirect('take_question', attempt_id=attempt.id, question_id=first_question.id)
+def test_start(request, test_id):
+    test = get_object_or_404(Test, pk=test_id)
 
-
-@login_required
-def take_question(request, attempt_id, question_id):
-    attempt = get_object_or_404(UserTestAttempt, id=attempt_id, user=request.user)
-    question = get_object_or_404(Question, id=question_id)
-    answers = Answer.objects.filter(question=question)
-    total_questions = Question.objects.filter(test=attempt.test).count()
-
-    # 🕒 Auto-submit check
-    allowed_end_time = attempt.start_time + timedelta(minutes=attempt.test.duration)
-    now = timezone.now()
-    if now > allowed_end_time:
-        # Force submit
-        attempt.end_time = allowed_end_time
-        attempt.is_completed = True
-        attempt.save()
-        return redirect('test_submit', attempt_id=attempt.id)
-
-    # Normal answer processing
-    if request.method == 'POST':
-        selected_answer_id = request.POST.get('answer')
-        if selected_answer_id:
-            selected_answer = Answer.objects.get(pk=selected_answer_id)
-            UserAnswer.objects.update_or_create(
-                attempt=attempt, question=question, defaults={'selected_answer': selected_answer}
-            )
-
-        next_question = Question.objects.filter(test=attempt.test, id__gt=question.id).first()
-        if next_question:
-            return redirect('take_question', attempt_id=attempt.id, question_id=next_question.id)
-        else:
-            return redirect('test_submit', attempt_id=attempt.id)
-
-    progress_percent = int(
-        (Question.objects.filter(test=attempt.test, id__lte=question.id).count() / total_questions) * 100
+    # Create a test attempt if none exists
+    attempt = UserTestAttempt.objects.create(
+        user=request.user,
+        test=test,
+        start_time=datetime.datetime.now()
     )
 
-    # Calculate remaining time (for JS display)
-    remaining_seconds = max(0, int((allowed_end_time - now).total_seconds()))
+    return redirect('take_question', attempt_id=attempt.id, question_num=1)
 
-    return render(request, 'quizzes/take_question.html', {
-        'attempt': attempt,
-        'question': question,
-        'answers': answers,
-        'question_num': Question.objects.filter(test=attempt.test, id__lte=question.id).count(),
-        'total_questions': total_questions,
-        'progress_percent': progress_percent,
-        'remaining_time': remaining_seconds,  # ⏳ Updated dynamically
+
+# -----------------------------
+# TAKE QUESTION
+# -----------------------------
+@login_required
+def take_question(request, attempt_id, question_num):
+    attempt = get_object_or_404(UserTestAttempt, pk=attempt_id)
+    questions = Question.objects.filter(test=attempt.test).order_by('id')
+    total_questions = len(questions)
+
+    if question_num > total_questions:
+        return redirect('test_submit', attempt_id=attempt.id)
+
+    question = questions[question_num - 1]
+    answers = Answer.objects.filter(question=question)
+
+    # Remaining time logic
+    elapsed = (datetime.datetime.now() - attempt.start_time).total_seconds()
+    remaining_time = attempt.test.duration * 60 - elapsed
+
+    if remaining_time <= 0:
+        return redirect('test_submit', attempt_id=attempt.id)
+
+    if request.method == "POST":
+        selected = request.POST.get("answer")
+        UserAnswer.objects.update_or_create(
+            user=request.user,
+            attempt=attempt,
+            question=question,
+            defaults={"selected_answer_id": selected}
+        )
+        return redirect('take_question', attempt_id=attempt.id, question_num=question_num + 1)
+
+    progress_percent = int((question_num - 1) / total_questions * 100)
+
+    return render(request, "quizzes/take_question.html", {
+        "attempt": attempt,
+        "question": question,
+        "answers": answers,
+        "question_num": question_num,
+        "total_questions": total_questions,
+        "progress_percent": progress_percent,
+        "remaining_time": int(remaining_time),
     })
 
 
-
+# -----------------------------
+# SUBMIT TEST
+# -----------------------------
 @login_required
 def test_submit(request, attempt_id):
-    attempt = get_object_or_404(UserTestAttempt, id=attempt_id, user=request.user)
-    answers = UserAnswer.objects.filter(attempt=attempt)
-    questions = Question.objects.filter(test=attempt.test)
-    total_questions = questions.count()
+    attempt = get_object_or_404(UserTestAttempt, pk=attempt_id)
 
-    correct_count = 0
-    category_correct = defaultdict(int)
-    category_total = defaultdict(int)
+    correct = 0
+    total = Question.objects.filter(test=attempt.test).count()
 
-    for a in answers:
-        q = a.question
-        if a.selected_answer and a.selected_answer.is_correct:
-            correct_count += 1
-            category_correct[q.category] += 1
-        category_total[q.category] += 1
+    for ua in UserAnswer.objects.filter(attempt=attempt):
+        if ua.selected_answer and ua.selected_answer.is_correct:
+            correct += 1
 
-    # Final overall score
-    attempt.end_time = timezone.now()
-    attempt.is_completed = True
-    attempt.score = round((correct_count / total_questions) * 100, 1)
+    score_percent = int((correct / total) * 100)
 
-    # Time & speed factor for IQ
-    time_taken = (attempt.end_time - attempt.start_time).total_seconds()
-    avg_time = max(5, (attempt.test.duration * 60) / total_questions)
-    accuracy = correct_count / total_questions
-    speed_factor = max(0.8, min(1.2, avg_time / (time_taken / total_questions)))
-    raw_score = (accuracy * 100) * speed_factor
-    iq_score = 100 + ((raw_score - 70) * 15 / 10)
-    attempt.iq_score = round(min(max(iq_score, 60), 160), 1)
+    attempt.score = score_percent
+    attempt.end_time = datetime.datetime.now()
     attempt.save()
 
-    # 🧠 Category-wise IQ calculation
-    category_iq = {}
-    for cat, total in category_total.items():
-        correct_ratio = category_correct[cat] / total if total else 0
-        cat_score = correct_ratio * 100
-        category_iq[cat] = round(100 + ((cat_score - 70) * 15 / 10), 1)
-
-    category_labels = {
-        'LR': 'Logical Reasoning',
-        'NR': 'Numerical Reasoning',
-        'VR': 'Verbal Reasoning',
-        'SR': 'Spatial Reasoning',
-        'MR': 'Memory'
-    }
-
-    category_results = [
-        {'name': category_labels.get(k, k), 'iq': v, 'correct': category_correct[k], 'total': category_total[k]}
-        for k, v in category_iq.items()
-    ]
-
-    return render(request, 'quizzes/results.html', {
-        'attempt': attempt,
-        'total_questions': total_questions,
-        'correct_count': correct_count,
-        'score_percentage': attempt.score,
-        'iq_score': attempt.iq_score,
-        'category_results': category_results
+    return render(request, "quizzes/results.html", {
+        "attempt": attempt,
+        "score": score_percent,
+        "correct": correct,
+        "total": total,
     })
 
+
+# -----------------------------
+# DOWNLOAD CERTIFICATE (PDF)
+# -----------------------------
+@login_required
+def download_certificate(request, attempt_id):
+    attempt = get_object_or_404(UserTestAttempt, pk=attempt_id)
+
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+
+    pdf.setFont("Helvetica-Bold", 24)
+    pdf.drawString(100, 750, "IQ Test Certificate")
+
+    pdf.setFont("Helvetica", 14)
+    pdf.drawString(100, 700, f"Name: {request.user.username}")
+    pdf.drawString(100, 675, f"Test: {attempt.test.title}")
+    pdf.drawString(100, 650, f"Score: {attempt.score}%")
+    pdf.drawString(100, 625, f"Date: {attempt.end_time.date()}")
+
+    pdf.showPage()
+    pdf.save()
+
+    buffer.seek(0)
+
+    response = HttpResponse(buffer, content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="certificate.pdf"'
+    return response
+
+
+# -----------------------------
+# USER DASHBOARD
+# -----------------------------
 @login_required
 def user_dashboard(request):
-    attempts = UserTestAttempt.objects.filter(user=request.user, is_completed=True)
-    avg_score = round(sum(a.iq_score for a in attempts) / len(attempts), 1) if attempts else 0
-    return render(request, 'quizzes/user_dashboard.html', {
-        'completed_attempts': attempts,
-        'average_score': avg_score
+    attempts = UserTestAttempt.objects.filter(user=request.user).order_by("-end_time")
+
+    # Average score
+    avg = attempts.aggregate(avg_score=Q("score")) if attempts else 0
+
+    return render(request, "quizzes/user_dashboard.html", {
+        "completed_attempts": attempts,
+        "average_score": avg,
     })
