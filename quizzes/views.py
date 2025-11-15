@@ -11,21 +11,16 @@ from django.db.models import Q
 from .models import Test, Question, Answer, UserTestAttempt, UserAnswer
 
 import math
-import datetime
-from datetime import timedelta
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.utils import ImageReader
 from reportlab.lib.colors import HexColor
-
+from django.utils import timezone   # ✅ FIXED — timezone-safe
 
 # -----------------------------
 # REGISTER VIEW
 # -----------------------------
 def register(request):
-    """Handles user account creation with your new register template."""
-
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
@@ -44,8 +39,6 @@ def register(request):
 # CUSTOM LOGIN VIEW
 # -----------------------------
 def custom_login(request):
-    """Custom login page that loads your template instead of Django default."""
-
     if request.method == "POST":
         form = AuthenticationForm(request, data=request.POST)
 
@@ -55,7 +48,6 @@ def custom_login(request):
             return redirect('user_dashboard')
         else:
             messages.error(request, "Invalid username or password.")
-
     else:
         form = AuthenticationForm()
 
@@ -78,11 +70,11 @@ def test_list(request):
 def test_start(request, test_id):
     test = get_object_or_404(Test, pk=test_id)
 
-    # Create a test attempt if none exists
+    # Create a test attempt (timezone-safe)
     attempt = UserTestAttempt.objects.create(
         user=request.user,
         test=test,
-        start_time=datetime.datetime.now()
+        start_time=timezone.now()    # ✅ FIXED
     )
 
     return redirect('take_question', attempt_id=attempt.id, question_num=1)
@@ -97,14 +89,15 @@ def take_question(request, attempt_id, question_num):
     questions = Question.objects.filter(test=attempt.test).order_by('id')
     total_questions = len(questions)
 
+    # Test complete
     if question_num > total_questions:
         return redirect('test_submit', attempt_id=attempt.id)
 
     question = questions[question_num - 1]
     answers = Answer.objects.filter(question=question)
 
-    # Remaining time logic
-    elapsed = (datetime.datetime.now() - attempt.start_time).total_seconds()
+    # Remaining time logic (timezone-safe)
+    elapsed = (timezone.now() - attempt.start_time).total_seconds()   # ✅ FIXED
     remaining_time = attempt.test.duration * 60 - elapsed
 
     if remaining_time <= 0:
@@ -112,12 +105,13 @@ def take_question(request, attempt_id, question_num):
 
     if request.method == "POST":
         selected = request.POST.get("answer")
+
         UserAnswer.objects.update_or_create(
-            user=request.user,
             attempt=attempt,
             question=question,
             defaults={"selected_answer_id": selected}
         )
+
         return redirect('take_question', attempt_id=attempt.id, question_num=question_num + 1)
 
     progress_percent = int((question_num - 1) / total_questions * 100)
@@ -150,7 +144,8 @@ def test_submit(request, attempt_id):
     score_percent = int((correct / total) * 100)
 
     attempt.score = score_percent
-    attempt.end_time = datetime.datetime.now()
+    attempt.end_time = timezone.now()   # ✅ FIXED
+    attempt.is_completed = True
     attempt.save()
 
     return render(request, "quizzes/results.html", {
@@ -178,7 +173,9 @@ def download_certificate(request, attempt_id):
     pdf.drawString(100, 700, f"Name: {request.user.username}")
     pdf.drawString(100, 675, f"Test: {attempt.test.title}")
     pdf.drawString(100, 650, f"Score: {attempt.score}%")
-    pdf.drawString(100, 625, f"Date: {attempt.end_time.date()}")
+
+    if attempt.end_time:
+        pdf.drawString(100, 625, f"Date: {attempt.end_time.date()}")
 
     pdf.showPage()
     pdf.save()
@@ -186,7 +183,7 @@ def download_certificate(request, attempt_id):
     buffer.seek(0)
 
     response = HttpResponse(buffer, content_type="application/pdf")
-    response["Content-Disposition"] = 'attachment; filename="certificate.pdf"'
+    response["Content-Disposition"] = 'attachment; filename=\"certificate.pdf\"'
     return response
 
 
@@ -197,10 +194,6 @@ def download_certificate(request, attempt_id):
 def user_dashboard(request):
     attempts = UserTestAttempt.objects.filter(user=request.user).order_by("-end_time")
 
-    # Average score
-    avg = attempts.aggregate(avg_score=Q("score")) if attempts else 0
-
     return render(request, "quizzes/user_dashboard.html", {
         "completed_attempts": attempts,
-        "average_score": avg,
     })

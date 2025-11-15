@@ -1,0 +1,158 @@
+[
+  {
+    "model": "quizzes.test",
+    "pk": 1,
+    "fields": {
+      "title": "Basic IQ Test",
+      "description": "A sample IQ test with verbal, logical and numerical questions.",
+      "duration": 15
+    }
+  },
+
+  {
+    "model": "quizzes.question",
+    "pk": 1,
+    "fields": {
+      "test": 1,
+      "text": "What is the next number in the series: 2, 4, 8, 16, ?",
+      "image": null,
+      "question_type": "MC",
+      "category": "NR",
+      "difficulty": "M"
+    }
+  },
+  {
+    "model": "quizzes.answer",
+    "pk": 1,
+    "fields": {
+      "question": 1,
+      "text": "18",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "quizzes.answer",
+    "pk": 2,
+    "fields": {
+      "question": 1,
+      "text": "24",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "quizzes.answer",
+    "pk": 3,
+    "fields": {
+      "question": 1,
+      "text": "32",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "quizzes.answer",
+    "pk": 4,
+    "fields": {
+      "question": 1,
+      "text": "34",
+      "is_correct": false
+    }
+  },
+
+  {
+    "model": "quizzes.question",
+    "pk": 2,
+    "fields": {
+      "test": 1,
+      "text": "Find the odd one out: Apple, Mango, Banana, Car",
+      "image": null,
+      "question_type": "MC",
+      "category": "VR",
+      "difficulty": "E"
+    }
+  },
+  {
+    "model": "quizzes.answer",
+    "pk": 5,
+    "fields": {
+      "question": 2,
+      "text": "Apple",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "quizzes.answer",
+    "pk": 6,
+    "fields": {
+      "question": 2,
+      "text": "Mango",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "quizzes.answer",
+    "pk": 7,
+    "fields": {
+      "question": 2,
+      "text": "Banana",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "quizzes.answer",
+    "pk": 8,
+    "fields": {
+      "question": 2,
+      "text": "Car",
+      "is_correct": true
+    }
+  },
+
+  {
+    "model": "quizzes.question",
+    "pk": 3,
+    "fields": {
+      "test": 1,
+      "text": "Which shape completes the pattern?",
+      "image": null,
+      "question_type": "MC",
+      "category": "SR",
+      "difficulty": "M"
+    }
+  },
+  {
+    "model": "quizzes.answer",
+    "pk": 9,
+    "fields": {
+      "question": 3,
+      "text": "Circle",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "quizzes.answer",
+    "pk": 10,
+    "fields": {
+      "question": 3,
+      "text": "Triangle",
+      "is_correct": true
+    }
+  },
+  {
+    "model": "quizzes.answer",
+    "pk": 11,
+    "fields": {
+      "question": 3,
+      "text": "Square",
+      "is_correct": false
+    }
+  },
+  {
+    "model": "quizzes.answer",
+    "pk": 12,
+    "fields": {
+      "question": 3,
+      "text": "Pentagon",
+      "is_correct": false
+    }
+  }
+]

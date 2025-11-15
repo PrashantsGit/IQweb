@@ -3,7 +3,9 @@
 
 {% block extra_css %}
 <style>
-    /* Smooth fade transition */
+/* ------------------ VISUALS ------------------ */
+
+/* Smooth fade transition */
 .fade-question {
     opacity: 1;
     transform: translateY(0);
@@ -14,326 +16,243 @@
     transform: translateY(20px);
 }
 
-/* Page layout */
+/* Layout container */
 .container-card {
-  max-width: 900px;
-  margin: 28px auto;
+    max-width: 900px;
+    margin: 28px auto;
 }
 
-/* Glass panel */
 .panel {
-  background: rgba(255,255,255,0.16);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 14px;
-  padding: 22px;
-  box-shadow: 0 10px 30px rgba(2,6,23,0.12);
+    background: rgba(255,255,255,0.16);
+    backdrop-filter: blur(10px);
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: 0 10px 30px rgba(2,6,23,0.12);
 }
 
-/* Top bar (timer + progress) */
+/* Top row */
 .top-row {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  margin-bottom: 14px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-bottom: 14px;
 }
+
 .timer-badge {
-  background: linear-gradient(135deg,#ff7a7a,#ffb86b);
-  color: white;
-  padding:8px 12px;
-  border-radius: 999px;
-  font-weight:700;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
-}
-.progress-wrap {
-  flex:1;
-  margin-left: 12px;
+    background: linear-gradient(135deg,#ff7a7a,#ffb86b);
+    color:white;
+    padding:8px 12px;
+    border-radius:999px;
+    font-weight:700;
 }
 
-/* Question area */
+/* Question */
 .question-text {
-  font-size: 1.15rem;
-  font-weight:600;
-  margin-bottom: 14px;
-  color: #0b1220;
+    font-size:1.15rem;
+    font-weight:600;
+    margin-bottom:14px;
+    color:#0b1220;
 }
 
-/* Image (if present) */
 .question-image {
-  width:100%;
-  max-height: 320px;
-  object-fit: contain;
-  border-radius: 10px;
-  background: #f8fafc;
-  padding: 10px;
-  border: 1px solid rgba(0,0,0,0.04);
-  margin-bottom: 16px;
+    width:100%;
+    max-height:320px;
+    object-fit:contain;
+    border-radius:10px;
+    background:#f8fafc;
+    padding:10px;
+    border:1px solid rgba(0,0,0,0.04);
+    margin-bottom:16px;
 }
 
-/* Answers grid */
+/* Answer tiles */
 .answers-grid {
-  display:flex;
-  flex-direction:column;
-  gap: 10px;
-  margin-top: 12px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-top:12px;
 }
 
-/* Stylized radio button tiles */
 .answer-tile {
-  display:flex;
-  gap:12px;
-  align-items:center;
-  padding:12px 14px;
-  border-radius:12px;
-  background: rgba(255,255,255,0.9);
-  box-shadow: 0 6px 18px rgba(2,6,23,0.06);
-  cursor: pointer;
-  transition: transform .12s ease, box-shadow .12s ease;
-  border: 2px solid transparent;
+    display:flex;
+    gap:12px;
+    align-items:center;
+    padding:12px 14px;
+    border-radius:12px;
+    background:white;
+    box-shadow:0 6px 18px rgba(2,6,23,0.06);
+    cursor:pointer;
+    transition: transform .12s ease, box-shadow .12s ease;
+    border:2px solid transparent;
 }
-.answer-tile:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(2,6,23,0.08); }
-.answer-tile input[type="radio"] {
-  width:18px;
-  height:18px;
-  accent-color: #2575fc;
+
+.answer-tile:hover {
+    transform:translateY(-4px);
+    box-shadow:0 12px 30px rgba(2,6,23,0.08);
 }
+
 .answer-tile.selected {
-  border-color: rgba(37,117,252,0.35);
-  box-shadow: 0 14px 40px rgba(37,117,252,0.08);
+    border-color: rgba(37,117,252,0.4);
+    box-shadow:0 14px 40px rgba(37,117,252,0.08);
 }
 
-/* Submit area */
+.answer-tile input[type="radio"] {
+    width:18px;
+    height:18px;
+    accent-color:#2575fc;
+}
+
+/* Buttons */
 .actions {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-top:18px;
-  gap:12px;
-}
-.btn-primary {
-  background: linear-gradient(135deg,#6a11cb,#2575fc);
-  border: none;
-}
-.btn-ghost {
-  background: transparent;
-  color: #2575fc;
-  border: 1px solid rgba(37,117,252,0.12);
-  padding: 8px 14px;
-  border-radius: 10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:20px;
 }
 
-/* small screens tweaks */
-@media (max-width: 720px) {
-  .top-row { flex-direction: column; align-items: stretch; }
-  .progress-wrap { margin-left: 0; margin-top: 8px; }
-  .answer-tile { padding: 10px; }
+.btn-primary {
+    background: linear-gradient(135deg,#6a11cb,#2575fc);
+    color:white;
+    border:none;
+}
+
+.btn-ghost {
+    background:transparent;
+    color:#2575fc;
+    border:1px solid rgba(37,117,252,0.12);
+    padding:8px 14px;
+    border-radius:10px;
+}
+
+/* Mobile tweaks */
+@media (max-width:720px) {
+    .top-row { flex-direction:column; align-items:stretch; }
 }
 </style>
 {% endblock %}
 
+
 {% block content %}
 <div class="container container-card">
-  <div class="panel">
+    <div class="panel">
 
-    <!-- Top row: progress + timer -->
-    <div class="top-row">
-      <div style="min-width:140px;">
-        <div class="timer-badge" id="timerBadge" aria-live="polite" title="Time remaining">
-          ⏱ <span id="timer">{{ remaining_time }}</span>s
-        </div>
-      </div>
+        <!-- Top row: timer + progress -->
+        <div class="top-row">
+            <div style="min-width:140px;">
+                <div class="timer-badge">
+                    ⏱ <span id="timer">{{ remaining_time }}</span>s
+                </div>
+            </div>
 
-      <div class="progress-wrap">
-        <div class="d-flex justify-content-between mb-1">
-          <small class="text-muted">Question {{ question_num }} of {{ total_questions }}</small>
-          <small class="text-muted">{{ progress_percent }}% complete</small>
+            <div class="progress-wrap flex-grow-1">
+                <div class="d-flex justify-content-between mb-1">
+                    <small>Question {{ question_num }} of {{ total_questions }}</small>
+                    <small>{{ progress_percent }}% complete</small>
+                </div>
+                <div class="progress" style="height:10px; border-radius:9px;">
+                    <div class="progress-bar" role="progressbar"
+                         style="width: {{ progress_percent }}%;">
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="progress" style="height:10px; border-radius:8px;">
-          <div class="progress-bar" role="progressbar" style="width: {{ progress_percent }}%;" aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+
+        <!-- Title -->
+        <h4 class="mb-3" style="margin:0; color:#0b1220;">{{ attempt.test.title }}</h4>
+        <hr>
+
+        <!-- Question -->
+        <div id="questionContainer" class="fade-question">
+
+            <p class="question-text">{{ question.text }}</p>
+
+            {% if question.image %}
+                <img src="{{ question.image.url }}" class="question-image">
+            {% endif %}
+
+            <!-- FORM -->
+            <form method="POST" id="answerForm">
+                {% csrf_token %}
+
+                <div class="answers-grid">
+
+                    {% if question.question_type == 'MC' %}
+                        {% for answer in answers %}
+                        <label class="answer-tile">
+                            <input type="radio" name="answer" value="{{ answer.id }}" required>
+                            <div style="flex:1;">{{ answer.text }}</div>
+                        </label>
+                        {% endfor %}
+
+                    {% elif question.question_type == 'LG' %}
+                        <textarea name="text_input" class="form-control"
+                                  rows="5" required></textarea>
+
+                    {% endif %}
+                </div>
+
+                <div class="actions">
+                    <a href="{% url 'test_list' %}" class="btn btn-ghost">Exit Test</a>
+                    <button type="submit" id="submitBtn" class="btn btn-primary">
+                        Submit & Continue
+                    </button>
+                </div>
+            </form>
+
         </div>
-      </div>
+
     </div>
-
-    <!-- Test title -->
-    <div class="mb-3">
-      <h4 style="margin:0; color:#0b1220;">{{ attempt.test.title }}</h4>
-    </div>
-
-    <hr>
-
-    <!-- Question -->
-    <div id="questionContainer" class="fade-question">
-
-      <p class="question-text">{{ question.text }}</p>
-
-      {% if question.image %}
-        <img src="{{ question.image.url }}" alt="Question image" class="question-image">
-      {% endif %}
-
-      <form method="POST" id="answerForm">
-        {% csrf_token %}
-
-        <div class="answers-grid" role="radiogroup" aria-labelledby="questionLabel">
-          {% if question.question_type == 'MC' %}
-            {% for answer in answers %}
-            <label class="answer-tile" tabindex="0">
-              <input type="radio" name="answer" value="{{ answer.pk }}" aria-checked="false" required>
-              <div style="flex:1;">
-                {{ answer.text }}
-              </div>
-            </label>
-            {% endfor %}
-          {% elif question.question_type == 'LG' %}
-            <textarea name="text_input" class="form-control" rows="5" placeholder="Type your answer here..." required></textarea>
-          {% else %}
-            <p class="text-muted">Unsupported question type: {{ question.get_question_type_display }}</p>
-          {% endif %}
-        </div>
-
-        <!-- Actions -->
-        <div class="actions">
-          <a href="{% url 'test_list' %}" class="btn btn-ghost">Exit Test</a>
-
-          <div style="display:flex; gap:8px;">
-            <button type="submit" id="submitBtn" class="btn btn-primary">Submit & Continue</button>
-          </div>
-        </div>
-
-      </form>
-    </div>
-
-  </div>
 </div>
 {% endblock %}
 
+
 {% block extra_js %}
 <script>
-/*
-Client-side timer sync and auto-submit behavior.
+/* ------------------- TIMER ------------------- */
+let timeLeft = parseInt("{{ remaining_time }}");
+const timerEl = document.getElementById("timer");
+const autoSubmitURL = "{% url 'test_submit' attempt_id=attempt.id %}";
 
-- `remaining_time` is provided server-side (seconds).
-- This script displays countdown and automatically submits (redirects) when time hits zero.
-- Also provides UI selection feedback for radio tiles and keyboard accessibility.
-*/
-// Animated transition on submit
-const qContainer = document.getElementById("questionContainer");
-const formElement = document.getElementById("answerForm");
-
-formElement.addEventListener("submit", function(e) {
-    e.preventDefault();  // stop form for a moment
-
-    disableForm(); // from previous script (prevents double submit)
-
-    // Animate out
-    qContainer.classList.add("hide");
-
-    // Wait for animation to finish, then submit
-    setTimeout(() => {
-        formElement.submit();
-    }, 450); // matches CSS transition time
-});
-
-// Fade-in on load
-setTimeout(() => {
-    qContainer.classList.remove("hide");
-}, 50);
-
-
-document.addEventListener("DOMContentLoaded", function() {
-  // ---------- TIMER ----------
-  const timerEl = document.getElementById("timer");
-  let timeLeft = parseInt(timerEl.textContent || "0", 10);
-
-  // reference to attempt submit URL (use direct redirect to test_submit when time up)
-  const submitRedirectUrl = "{% url 'test_submit' attempt_id=attempt.pk %}";
-
-  function tick() {
+function tick() {
     if (timeLeft <= 0) {
-      // time's up → redirect to submission (server will finalize)
-      // disable form controls first
-      disableForm();
-      window.location.href = submitRedirectUrl;
-      return;
+        window.location.href = autoSubmitURL;
+        return;
     }
     timeLeft -= 1;
     timerEl.textContent = timeLeft;
-  }
+}
+setInterval(tick, 1000);
 
-  // run immediately and then every second
-  setInterval(tick, 1000);
 
-  // ---------- RADIO TILE SELECT VISUALS ----------
-  const tiles = document.querySelectorAll(".answer-tile");
-  tiles.forEach(tile => {
-    const radio = tile.querySelector('input[type="radio"]');
+/* ------------------- ANSWER TILE UI ------------------- */
+const tiles = document.querySelectorAll(".answer-tile");
 
-    // clicking/tapping the whole tile selects the radio
-    tile.addEventListener("click", (e) => {
-      // allow clicking on internal links or inputs naturally
-      if (e.target.tagName.toLowerCase() === 'a') return;
-      radio.checked = true;
-      updateSelectionVisuals();
+function updateTiles() {
+    tiles.forEach(t => {
+        const r = t.querySelector("input[type='radio']");
+        if (r.checked) t.classList.add("selected");
+        else t.classList.remove("selected");
     });
+}
 
-    // keyboard accessibility: Enter/Space selects
-    tile.addEventListener("keydown", (e) => {
-      if (e.key === " " || e.key === "Enter") {
-        e.preventDefault();
+tiles.forEach(tile => {
+    const radio = tile.querySelector("input[type='radio']");
+    tile.addEventListener("click", () => {
         radio.checked = true;
-        updateSelectionVisuals();
-        // focus the radio for screen readers
-        radio.focus();
-      }
+        updateTiles();
     });
-  });
+    radio.addEventListener("change", updateTiles);
+});
+updateTiles();
 
-  function updateSelectionVisuals() {
-    tiles.forEach(tile => {
-      const radio = tile.querySelector('input[type="radio"]');
-      if (radio.checked) tile.classList.add("selected");
-      else tile.classList.remove("selected");
-    });
-  }
 
-  // initialize visuals on page load
-  updateSelectionVisuals();
+/* ------------------- FADE ON SUBMIT ------------------- */
+const form = document.getElementById("answerForm");
+const qContainer = document.getElementById("questionContainer");
 
-  // bind change event so if user uses keyboard to change, UI updates
-  document.querySelectorAll('.answer-tile input[type="radio"]').forEach(r => {
-    r.addEventListener('change', updateSelectionVisuals);
-  });
-
-  // ---------- PREVENT DOUBLE SUBMIT ----------
-  const form = document.getElementById("answerForm");
-  const submitBtn = document.getElementById("submitBtn");
-
-  function disableForm() {
-    // disable all inputs to prevent strange behavior
-    form.querySelectorAll("input, textarea, button").forEach(el => el.disabled = true);
-    submitBtn.classList.add("disabled");
-  }
-
-  form.addEventListener("submit", (e) => {
-    // Basic client-side check: ensure an answer is selected if MC
-    const qType = "{{ question.question_type }}";
-    if (qType === 'MC') {
-      const selected = form.querySelector('input[name="answer"]:checked');
-      if (!selected) {
-        e.preventDefault();
-        alert("Please select an answer before continuing.");
-        return;
-      }
-    }
-    // On submit, disable form to prevent double-submits
-    disableForm();
-    // allow form to submit normally (server-side will handle redirect to next question or results)
-  });
-
-  // ---------- SAFETY: re-sync with server time if user is inactive for long ----------
-  // (Optional) You could implement periodic small pings to server to re-check remaining time.
-  // For now, the server-side check in take_question() will enforce auto-submit if the user manipulates time.
-
+form.addEventListener("submit", function() {
+    qContainer.classList.add("hide");  // smooth fade out
 });
 </script>
 {% endblock %}
