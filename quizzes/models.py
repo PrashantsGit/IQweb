@@ -24,6 +24,21 @@ class Test(models.Model):
     def __str__(self):
         return self.title
 
+    # NATURAL KEY SUPPORT (harmless even if using PK JSON)
+    def natural_key(self):
+        return (self.title,)
+
+    natural_key.dependencies = []
+
+    @classmethod
+    def get_by_natural_key(cls, title):
+        return cls.objects.get(title=title)
+
+
+class QuestionManager(models.Manager):
+    def get_by_natural_key(self, text):
+        return self.get(text=text)
+
 
 class Question(models.Model):
     test = models.ForeignKey(Test, on_delete=models.CASCADE)
@@ -33,8 +48,13 @@ class Question(models.Model):
     category = models.CharField(max_length=2, choices=CATEGORY_CHOICES, default='LR')
     difficulty = models.CharField(max_length=1, choices=DIFFICULTY_LEVELS, default='M')
 
+    objects = QuestionManager()  # NATURAL KEY MANAGER
+
     def __str__(self):
         return self.text[:80]
+
+    def natural_key(self):
+        return (self.text,)
 
 
 class Answer(models.Model):
@@ -42,6 +62,7 @@ class Answer(models.Model):
     text = models.CharField(max_length=255)
     is_correct = models.BooleanField(default=False)
 
+    # NO natural-key logic here — PK JSON is cleaner & safer
     def __str__(self):
         return f"{self.text} ({'✔' if self.is_correct else '✖'})"
 

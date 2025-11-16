@@ -1,0 +1,462 @@
+[
+  {
+    "model": "quizzes.test",
+    "pk": 200,
+    "fields": {
+      "title": "Advanced IQ Test",
+      "description": "25-question advanced IQ assessment with numerical, logical, verbal and spatial reasoning.",
+      "duration": 30
+    }
+  },
+
+  {
+    "model": "quizzes.question",
+    "pk": 300,
+    "fields": {
+      "test": 200,
+      "text": "3, 9, 27, 81, ?",
+      "question_type": "MC",
+      "category": "NR",
+      "difficulty": "M",
+      "image": null
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 500, "fields": { "question": 300, "text": "162", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 501, "fields": { "question": 300, "text": "243", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 502, "fields": { "question": 300, "text": "212", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 503, "fields": { "question": 300, "text": "324", "is_correct": false }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 301,
+    "fields": {
+      "test": 200,
+      "text": "All Brins are Klims. No Klims are Zors. What follows?",
+      "question_type": "MC",
+      "category": "LR",
+      "difficulty": "M",
+      "image": null
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 504, "fields": { "question": 301, "text": "All Brins are Zors", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 505, "fields": { "question": 301, "text": "Some Brins are Zors", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 506, "fields": { "question": 301, "text": "No Brins are Zors", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 507, "fields": { "question": 301, "text": "Cannot be determined", "is_correct": false }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 302,
+    "fields": {
+      "test": 200,
+      "text": "A, C, F, J, O, ?",
+      "question_type": "MC",
+      "category": "VR",
+      "difficulty": "M",
+      "image": null
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 508, "fields": { "question": 302, "text": "R", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 509, "fields": { "question": 302, "text": "U", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 510, "fields": { "question": 302, "text": "V", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 511, "fields": { "question": 302, "text": "W", "is_correct": false }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 303,
+    "fields": {
+      "test": 200,
+      "text": "Complete the grid: 6,3,2 / 12,4,3 / ?,5,4",
+      "question_type": "MC",
+      "category": "NR",
+      "difficulty": "H",
+      "image": null
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 512, "fields": { "question": 303, "text": "16", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 513, "fields": { "question": 303, "text": "20", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 514, "fields": { "question": 303, "text": "22", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 515, "fields": { "question": 303, "text": "24", "is_correct": false }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 304,
+    "fields": {
+      "test": 200,
+      "text": "If all red items are circles and some circles are hollow, what must be true?",
+      "question_type": "MC",
+      "category": "LR",
+      "difficulty": "M",
+      "image": null
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 516, "fields": { "question": 304, "text": "All red items are hollow", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 517, "fields": { "question": 304, "text": "No red items are hollow", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 518, "fields": { "question": 304, "text": "Some red items may be hollow", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 519, "fields": { "question": 304, "text": "Hollow items are red", "is_correct": false }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 305,
+    "fields": {
+      "test": 200,
+      "text": "5→12, 7→20, 9→30, 11→?",
+      "question_type": "MC",
+      "category": "NR",
+      "difficulty": "M",
+      "image": null
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 520, "fields": { "question": 305, "text": "54", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 521, "fields": { "question": 305, "text": "60", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 522, "fields": { "question": 305, "text": "66", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 523, "fields": { "question": 305, "text": "72", "is_correct": false }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 306,
+    "fields": {
+      "test": 200,
+      "text": "Light is to Dark as Hot is to ?",
+      "question_type": "MC",
+      "category": "VR",
+      "difficulty": "E",
+      "image": null
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 524, "fields": { "question": 306, "text": "Warm", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 525, "fields": { "question": 306, "text": "Heat", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 526, "fields": { "question": 306, "text": "Fire", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 527, "fields": { "question": 306, "text": "Cold", "is_correct": true }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 307,
+    "fields": {
+      "test": 200,
+      "text": "If June 1 is Monday, what day is June 18?",
+      "question_type": "MC",
+      "category": "LR",
+      "difficulty": "M",
+      "image": null
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 528, "fields": { "question": 307, "text": "Tuesday", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 529, "fields": { "question": 307, "text": "Wednesday", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 530, "fields": { "question": 307, "text": "Thursday", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 531, "fields": { "question": 307, "text": "Friday", "is_correct": false }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 308,
+    "fields": {
+      "test": 200,
+      "text": "Odd one out: Piano, Guitar, Flute, Tiger",
+      "question_type": "MC",
+      "category": "VR",
+      "difficulty": "E",
+      "image": null
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 532, "fields": { "question": 308, "text": "Piano", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 533, "fields": { "question": 308, "text": "Guitar", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 534, "fields": { "question": 308, "text": "Flute", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 535, "fields": { "question": 308, "text": "Tiger", "is_correct": true }}
+  ,
+  {
+    "model": "quizzes.question",
+    "pk": 309,
+    "fields": {
+      "test": 200,
+      "text": "2, 5, 11, 23, 47, ?",
+      "question_type": "MC",
+      "category": "NR",
+      "difficulty": "H",
+      "image": null
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 536, "fields": { "question": 309, "text": "89", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 537, "fields": { "question": 309, "text": "95", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 538, "fields": { "question": 309, "text": "99", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 539, "fields": { "question": 309, "text": "101", "is_correct": false }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 310,
+    "fields": {
+      "test": 200,
+      "text": "Select the missing tile in this 3×3 pattern.",
+      "question_type": "MC",
+      "category": "SR",
+      "difficulty": "H",
+      "image": "questions/img11.png"
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 540, "fields": { "question": 310, "text": "1 shape rotated 270°", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 541, "fields": { "question": 310, "text": "2 shapes rotated 180°", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 542, "fields": { "question": 310, "text": "3 shapes rotated 180°", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 543, "fields": { "question": 310, "text": "3 shapes rotated 90°", "is_correct": false }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 311,
+    "fields": {
+      "test": 200,
+      "text": "Which rotation matches the original polygon?",
+      "question_type": "MC",
+      "category": "SR",
+      "difficulty": "M",
+      "image": "questions/img12.png"
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 544, "fields": { "question": 311, "text": "30° rotation", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 545, "fields": { "question": 311, "text": "90° rotation", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 546, "fields": { "question": 311, "text": "180° rotation", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 547, "fields": { "question": 311, "text": "270° rotation", "is_correct": false }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 312,
+    "fields": {
+      "test": 200,
+      "text": "Which cube correctly folds from the shown net?",
+      "question_type": "MC",
+      "category": "SR",
+      "difficulty": "H",
+      "image": "questions/img13.png"
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 548, "fields": { "question": 312, "text": "Cube A", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 549, "fields": { "question": 312, "text": "Cube B", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 550, "fields": { "question": 312, "text": "Cube C", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 551, "fields": { "question": 312, "text": "Cube D", "is_correct": false }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 313,
+    "fields": {
+      "test": 200,
+      "text": "Which shape comes next in the sequence?",
+      "question_type": "MC",
+      "category": "SR",
+      "difficulty": "M",
+      "image": "questions/img14.png"
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 552, "fields": { "question": 313, "text": "Circle", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 553, "fields": { "question": 313, "text": "Heptagon", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 554, "fields": { "question": 313, "text": "Hexagon", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 555, "fields": { "question": 313, "text": "Octagon", "is_correct": false }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 314,
+    "fields": {
+      "test": 200,
+      "text": "Choose the mirror reflection that completes the figure.",
+      "question_type": "MC",
+      "category": "SR",
+      "difficulty": "M",
+      "image": "questions/img15.png"
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 556, "fields": { "question": 314, "text": "Offset mirror", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 557, "fields": { "question": 314, "text": "Upside-down", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 558, "fields": { "question": 314, "text": "Wrong scaling", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 559, "fields": { "question": 314, "text": "Perfect mirror", "is_correct": true }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 315,
+    "fields": {
+      "test": 200,
+      "text": "Find the missing tile in this shaded pattern.",
+      "question_type": "MC",
+      "category": "SR",
+      "difficulty": "H",
+      "image": "questions/img16.png"
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 560, "fields": { "question": 315, "text": "Light 3 shapes", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 561, "fields": { "question": 315, "text": "Dark 3 shapes", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 562, "fields": { "question": 315, "text": "Medium 2 shapes", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 563, "fields": { "question": 315, "text": "Dark 4 shapes", "is_correct": false }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 316,
+    "fields": {
+      "test": 200,
+      "text": "Find the irregular shape.",
+      "question_type": "MC",
+      "category": "SR",
+      "difficulty": "M",
+      "image": "questions/img17.png"
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 564, "fields": { "question": 316, "text": "Unequal angles", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 565, "fields": { "question": 316, "text": "One side longer", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 566, "fields": { "question": 316, "text": "Circle", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 567, "fields": { "question": 316, "text": "Regular hexagon", "is_correct": false }}
+  ,
+  {
+    "model": "quizzes.question",
+    "pk": 317,
+    "fields": {
+      "test": 200,
+      "text": "What is the angle between the hands at 2:20?",
+      "question_type": "MC",
+      "category": "NR",
+      "difficulty": "M",
+      "image": "questions/img18.png"
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 568, "fields": { "question": 317, "text": "40°", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 569, "fields": { "question": 317, "text": "50°", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 570, "fields": { "question": 317, "text": "60°", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 571, "fields": { "question": 317, "text": "30°", "is_correct": false }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 318,
+    "fields": {
+      "test": 200,
+      "text": "Which tile completes the alternating pattern?",
+      "question_type": "MC",
+      "category": "SR",
+      "difficulty": "M",
+      "image": "questions/img19.png"
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 572, "fields": { "question": 318, "text": "Blue triangle", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 573, "fields": { "question": 318, "text": "Red triangle", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 574, "fields": { "question": 318, "text": "Red circle", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 575, "fields": { "question": 318, "text": "Blue circle", "is_correct": false }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 319,
+    "fields": {
+      "test": 200,
+      "text": "Final direction after following all arrows.",
+      "question_type": "MC",
+      "category": "LR",
+      "difficulty": "M",
+      "image": "questions/img20.png"
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 576, "fields": { "question": 319, "text": "Up", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 577, "fields": { "question": 319, "text": "Left", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 578, "fields": { "question": 319, "text": "Down", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 579, "fields": { "question": 319, "text": "Right", "is_correct": false }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 320,
+    "fields": {
+      "test": 200,
+      "text": "Next height in the bar sequence?",
+      "question_type": "MC",
+      "category": "SR",
+      "difficulty": "E",
+      "image": "questions/img21.png"
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 580, "fields": { "question": 320, "text": "10", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 581, "fields": { "question": 320, "text": "11", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 582, "fields": { "question": 320, "text": "13", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 583, "fields": { "question": 320, "text": "14", "is_correct": false }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 321,
+    "fields": {
+      "test": 200,
+      "text": "Which tile matches the correct color-shape pattern?",
+      "question_type": "MC",
+      "category": "SR",
+      "difficulty": "H",
+      "image": "questions/img22.png"
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 584, "fields": { "question": 321, "text": "Green Triangle", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 585, "fields": { "question": 321, "text": "Red Circle", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 586, "fields": { "question": 321, "text": "Blue Square", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 587, "fields": { "question": 321, "text": "Green Circle", "is_correct": true }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 322,
+    "fields": {
+      "test": 200,
+      "text": "What is the combined silhouette of the overlapping shapes?",
+      "question_type": "MC",
+      "category": "SR",
+      "difficulty": "H",
+      "image": "questions/img23.png"
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 588, "fields": { "question": 322, "text": "Circle only", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 589, "fields": { "question": 322, "text": "Square only", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 590, "fields": { "question": 322, "text": "Union silhouette", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 591, "fields": { "question": 322, "text": "Cutout circle", "is_correct": false }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 323,
+    "fields": {
+      "test": 200,
+      "text": "How many cubes are in the 3D structure?",
+      "question_type": "MC",
+      "category": "SR",
+      "difficulty": "H",
+      "image": "questions/img24.png"
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 592, "fields": { "question": 323, "text": "10", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 593, "fields": { "question": 323, "text": "12", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 594, "fields": { "question": 323, "text": "14", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 595, "fields": { "question": 323, "text": "16", "is_correct": false }},
+
+  {
+    "model": "quizzes.question",
+    "pk": 324,
+    "fields": {
+      "test": 200,
+      "text": "What is the final tile according to rotation + shading rules?",
+      "question_type": "MC",
+      "category": "SR",
+      "difficulty": "H",
+      "image": "questions/img25.png"
+    }
+  },
+
+  { "model": "quizzes.answer", "pk": 596, "fields": { "question": 324, "text": "Light rotated", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 597, "fields": { "question": 324, "text": "Reflected only", "is_correct": false }},
+  { "model": "quizzes.answer", "pk": 598, "fields": { "question": 324, "text": "Rotated + darkest shade", "is_correct": true }},
+  { "model": "quizzes.answer", "pk": 599, "fields": { "question": 324, "text": "Wrong shading", "is_correct": false }}
+
+]

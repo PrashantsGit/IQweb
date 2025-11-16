@@ -132,28 +132,121 @@ def take_question(request, attempt_id, question_num):
 # -----------------------------
 @login_required
 def test_submit(request, attempt_id):
+    from django.utils import timezone
+
     attempt = get_object_or_404(UserTestAttempt, pk=attempt_id)
 
-    correct = 0
-    total = Question.objects.filter(test=attempt.test).count()
+    # Get all questions from this test
+    questions = Question.objects.filter(test=attempt.test)
+    total_questions = questions.count()
 
-    for ua in UserAnswer.objects.filter(attempt=attempt):
+    # Fetch all user answers (with selected_answer prefetched)
+    user_answers = UserAnswer.objects.filter(attempt=attempt).select_related("selected_answer", "question")
+
+    # ------------------------------
+    # 1. COUNT CORRECT ANSWERS
+    # ------------------------------
+    correct_count = 0
+    for ua in user_answers:
         if ua.selected_answer and ua.selected_answer.is_correct:
-            correct += 1
+            correct_count += 1
 
-    score_percent = int((correct / total) * 100)
+    # Percentage score
+    if total_questions > 0:
+        score_percentage = round((correct_count / total_questions) * 100, 1)
+    else:
+        score_percentage = 0
 
-    attempt.score = score_percent
-    attempt.end_time = timezone.now()   # ✅ FIXED
+    # ------------------------------
+    # 2. WEIGHTED SCORING BASED ON DIFFICULTY
+    # ------------------------------
+    difficulty_weights = {"E": 1, "M": 2, "H": 3}
+
+    weighted_score = 0
+    max_weight = 0
+
+    for q in questions:
+        max_weight += difficulty_weights[q.difficulty]
+
+    for ua in user_answers:
+        if ua.selected_answer and ua.selected_answer.is_correct:
+            weighted_score += difficulty_weights[ua.question.difficulty]
+
+    if max_weight > 0:
+        ratio = weighted_score / max_weight  # 0..1 range
+    else:
+        ratio = 0
+
+    # ------------------------------
+    # 3. REALISTIC IQ CALCULATION (Gaussian)
+    # ------------------------------
+    # Convert ratio to Z-score
+    Z = (ratio - 0.5) * 3.2    # spreads nicely across typical human distribution
+
+    # Convert Z-score to IQ (mean=100, std dev=15)
+    iq_score = int(100 + 15 * Z)
+
+    # Hard limits for human IQ range
+    iq_score = max(60, min(160, iq_score))
+
+    # ------------------------------
+    # 4. CATEGORY BREAKDOWN
+    # ------------------------------
+    categories = {
+        "NR": "Numerical",
+        "VR": "Verbal",
+        "LR": "Logical",
+        "SR": "Spatial",
+        "MR": "Memory",
+    }
+
+    category_results = []
+
+    for code, name in categories.items():
+        cat_questions = questions.filter(category=code)
+        total_cat = cat_questions.count()
+
+        if total_cat == 0:
+            continue
+
+        correct_cat = user_answers.filter(
+            question__category=code,
+            selected_answer__is_correct=True
+        ).count()
+
+        # Category IQ scaling
+        cat_ratio = correct_cat / total_cat
+        cat_iq = int(60 + cat_ratio * 100)  # simplified for categories
+
+        category_results.append({
+            "name": name,
+            "correct": correct_cat,
+            "total": total_cat,
+            "iq": cat_iq,
+        })
+
+    # ------------------------------
+    # 5. SAVE ATTEMPT
+    # ------------------------------
+    attempt.score = score_percentage
+    attempt.iq_score = iq_score
+    attempt.end_time = timezone.now()
     attempt.is_completed = True
     attempt.save()
 
+    # ------------------------------
+    # 6. RENDER RESULTS PAGE
+    # ------------------------------
     return render(request, "quizzes/results.html", {
         "attempt": attempt,
-        "score": score_percent,
-        "correct": correct,
-        "total": total,
+        "correct_count": correct_count,
+        "total_questions": total_questions,
+        "score_percentage": score_percentage,
+        "iq_score": iq_score,
+        "category_results": category_results,
     })
+
+
 
 
 # -----------------------------
