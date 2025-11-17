@@ -13,7 +13,7 @@
     padding: 45px 48px;
     border: 1px solid rgba(255,255,255,0.35);
     box-shadow: 0 16px 40px rgba(15, 23, 42, 0.10);
-    color: #0f172a;  /* deep slate */
+    color: #0f172a;
 }
 
 /* ================= HEADER ================= */
@@ -25,7 +25,7 @@
 }
 
 .small-muted {
-    color: rgba(30, 41, 59, 0.65) !important; /* slate-600 */
+    color: rgba(30, 41, 59, 0.65) !important;
     font-size: 0.95rem;
 }
 
@@ -38,13 +38,13 @@
     flex-wrap: wrap;
 }
 
-.summary-left { 
+.summary-left {
     flex: 1 1 380px;
 }
 
-.summary-right { 
-    flex: 0 1 360px; 
-    text-align: center; 
+.summary-right {
+    flex: 0 1 360px;
+    text-align: center;
 }
 
 /* ================= STAT NUMBERS ================= */
@@ -54,21 +54,9 @@
     color: #0f172a;
 }
 
-/* ================= BOXES (Insights + Category) ================= */
-.insight-box,
-.cat-box {
-    background: rgba(255, 255, 255, 0.55); /* light glass */
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border-radius: 18px;
-    padding: 22px 26px;
-    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
-}
-
 /* ================= CATEGORY TABLE ================= */
 .table-cats th {
     background: rgba(37, 117, 252, 0.85);
-    backdrop-filter: blur(4px);
     color: #fff;
     font-weight: 600;
 }
@@ -78,10 +66,8 @@
     color: #0f172a;
 }
 
-/* Category IQ numbers */
 .cat-iq {
     font-weight: 700;
-    color: #0f172a;
 }
 
 /* ================= BUTTONS ================= */
@@ -95,27 +81,30 @@
     box-shadow: 0 4px 14px rgba(37,117,252,0.25);
 }
 
-.btn-primary:hover {
-    opacity: 0.92;
-}
-
 .btn-ghost {
     padding: 10px 20px;
     border-radius: 12px;
     background: rgba(255,255,255,0.75);
-    backdrop-filter: blur(6px);
     border: 1px solid rgba(37,117,252,0.20);
     color: #2563eb !important;
     font-weight: 600;
 }
 
-.btn-ghost:hover {
-    background: rgba(255,255,255,0.95);
+/* ================= AI FEEDBACK BOX ================= */
+.ai-box {
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(14px);
+    border-radius: 18px;
+    padding: 28px 32px;
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+    opacity: 0;
+    animation: fadeUp 0.8s ease-out forwards;
+    margin-top: 40px;
 }
 
-/* ================= GAUGE ================= */
-.gauge-wrap {
-    padding-top: 14px;
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* ================= RADAR CHART ================= */
@@ -141,7 +130,6 @@
     }
 }
 </style>
-
 {% endblock %}
 
 
@@ -149,15 +137,17 @@
 <div class="container-results">
   <div class="results-panel">
 
+    <!-- SUMMARY -->
     <div class="summary-row">
-      <!-- LEFT SIDE -->
+
+      <!-- LEFT -->
       <div class="summary-left">
-        <h3 class="mb-1">{{ attempt.test.title }}</h3>
+        <h3>{{ attempt.test.title }}</h3>
 
         {% if attempt.is_completed %}
-          <p class="small-muted">
-            Completed on <strong>{{ attempt.end_time|date:"H:i:s, F j, Y" }}</strong>
-          </p>
+        <p class="small-muted">
+          Completed on <strong>{{ attempt.end_time|date:"H:i:s, F j, Y" }}</strong>
+        </p>
         {% endif %}
 
         <div class="mt-3">
@@ -165,7 +155,7 @@
             <div class="num">{{ correct_count }}</div>
             <div>
               <div class="small-muted">Correct answers</div>
-              <div class="small-muted">{{ total_questions }} questions total</div>
+              <div class="small-muted">{{ total_questions }} total</div>
             </div>
           </div>
 
@@ -173,113 +163,90 @@
             <div class="num">{{ score_percentage|floatformat:1 }}%</div>
             <div>
               <div class="small-muted">Final score</div>
-              <div class="small-muted">Accuracy based</div>
+              <div class="small-muted">Based on accuracy</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- RIGHT SIDE - GAUGE -->
+      <!-- RIGHT IQ GAUGE -->
       <div class="summary-right">
-        <div class="gauge-wrap">
+        <svg id="iqGauge" width="320" height="200" viewBox="0 0 320 200">
+          <defs>
+            <linearGradient id="g1" x1="0" x2="1">
+              <stop offset="0%" stop-color="#6a11cb"/>
+              <stop offset="100%" stop-color="#2575fc"/>
+            </linearGradient>
+          </defs>
 
-          <svg id="iqGauge" width="320" height="200" viewBox="0 0 320 200" aria-label="IQ gauge">
-            <!-- gradients -->
-            <defs>
-              <linearGradient id="g1" x1="0" x2="1">
-                <stop offset="0%" stop-color="#6a11cb"/>
-                <stop offset="100%" stop-color="#2575fc"/>
-              </linearGradient>
-            </defs>
+          <path d="M20 170 A140 140 0 0 1 300 170"
+                fill="none"
+                stroke="rgba(255,255,255,0.08)"
+                stroke-width="26"
+                stroke-linecap="round"/>
 
-            <!-- background arc -->
-            <path d="M20 170 A140 140 0 0 1 300 170"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.08)"
-                  stroke-width="26"
-                  stroke-linecap="round"/>
+          <path id="gaugeArc"
+                d="M20 170 A140 140 0 0 1 300 170"
+                fill="none"
+                stroke="url(#g1)"
+                stroke-width="26"
+                stroke-linecap="round"
+                stroke-dasharray="0 1000"/>
 
-            <!-- animated score arc -->
-            <path id="gaugeArc"
-                  d="M20 170 A140 140 0 0 1 300 170"
-                  fill="none"
-                  stroke="url(#g1)"
-                  stroke-width="26"
-                  stroke-linecap="round"
-                  stroke-dasharray="0 1000"/>
+          <circle cx="160" cy="140" r="44" fill="rgba(0,0,0,0.25)"/>
 
-            <!-- center circle -->
-            <circle cx="160" cy="140" r="44" fill="rgba(0,0,0,0.25)"/>
+          <text id="gaugeIQ"
+                x="160" y="138"
+                text-anchor="middle"
+                font-size="20"
+                fill="#fff" font-weight="700">
+            {{ iq_score }}
+          </text>
 
-            <text id="gaugeIQ"
-                  x="160"
-                  y="138"
-                  text-anchor="middle"
-                  font-size="20"
-                  fill="#fff"
-                  font-weight="700">
-              {{ iq_score }}
-            </text>
-
-            <text x="160" y="158"
-                  text-anchor="middle"
-                  font-size="12"
-                  fill="rgba(255,255,255,0.8)">
-              Estimated IQ
-            </text>
-
-            <!-- TICKS REMOVED (no illegal .split() usage) -->
-
-          </svg>
-
-        </div>
+          <text x="160" y="158"
+                text-anchor="middle"
+                font-size="12"
+                fill="rgba(255,255,255,0.8)">
+            Estimated IQ
+          </text>
+        </svg>
 
         <div class="mt-2 small-muted">
-          IQ Score (scaled): <strong>{{ iq_score }}</strong>
+          IQ Score: <strong>{{ iq_score }}</strong>
         </div>
       </div>
     </div>
 
+
     <hr style="border-color:rgba(255,255,255,0.06); margin:20px 0;">
 
 
-    <!-- INSIGHTS & CATEGORY BREAKDOWN -->
+    <!-- INSIGHTS & CATEGORY -->
     <div class="row g-4">
 
-      <!-- Left: Performance -->
+      <!-- PERFORMANCE -->
       <div class="col-md-6">
         <div class="p-3" style="background:rgba(255,255,255,0.05); border-radius:12px;">
           <h5>Performance Insights</h5>
 
           <p class="small-muted">
-            {% if total_questions %}
-              Accuracy: <strong>{{ score_percentage|floatformat:1 }}%</strong> —
-              You got <strong>{{ correct_count }}</strong> out of <strong>{{ total_questions }}</strong>.
-            {% else %}
-              No scoring data available.
-            {% endif %}
+            You answered <strong>{{ correct_count }}</strong> out of <strong>{{ total_questions }}</strong>.
+            Accuracy: <strong>{{ score_percentage|floatformat:1 }}%</strong>
           </p>
 
-          <ul class="small-muted">
-            <li>Time taken: <strong>{{ attempt.end_time|default:"-" }}</strong></li>
-            <li>Comparison to average: <strong>Above average</strong></li>
-          </ul>
-
-          <div class="actions" style="justify-content:flex-start; margin-top:12px;">
+          <div class="actions mt-3">
             <a href="{% url 'user_dashboard' %}" class="btn btn-primary">Dashboard</a>
             <a href="{% url 'test_start' attempt.test.pk %}" class="btn btn-ghost">Retake Test</a>
-            <a href="{% url 'download_certificate' attempt_id=attempt.pk %}" class="btn btn-ghost">Download Certificate</a>
+            <a href="{% url 'download_certificate' attempt_id=attempt.pk %}" class="btn btn-ghost">Certificate</a>
           </div>
         </div>
       </div>
 
-
-      <!-- Right: Category Breakdown -->
+      <!-- CATEGORY BREAKDOWN -->
       <div class="col-md-6">
         <div class="p-3" style="background:rgba(255,255,255,0.05); border-radius:12px;">
           <h5>Category Breakdown</h5>
 
-          {% if category_results %}
           <div class="table-responsive mt-2">
             <table class="table table-sm table-cats">
               <thead>
@@ -290,7 +257,6 @@
                   <th>IQ</th>
                 </tr>
               </thead>
-
               <tbody>
               {% for cat in category_results %}
                 <tr>
@@ -307,13 +273,27 @@
           <div class="chart-box mt-3">
             <canvas id="radarChart" height="220"></canvas>
           </div>
-
-          {% else %}
-            <p class="small-muted">No category data available.</p>
-          {% endif %}
         </div>
       </div>
+    </div>
 
+
+    <!-- AI FEEDBACK SECTION -->
+    <div class="ai-box">
+      <div class="d-flex align-items-center mb-3">
+        <div style="
+            width: 40px; height: 40px; border-radius: 12px;
+            background: linear-gradient(135deg,#6a11cb,#2575fc);
+            display: flex; justify-content:center; align-items:center;
+            font-size:20px; color:white;">
+          🤖
+        </div>
+        <h4 class="ms-3 mb-0" style="font-weight:700;">AI-Powered Personalized Feedback</h4>
+      </div>
+
+      <p style="white-space: pre-line; color:#1e293b; font-size:1.05rem; line-height:1.55;">
+        {{ ai_feedback }}
+      </p>
     </div>
 
   </div>
@@ -325,7 +305,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-/* -------------------- IQ Gauge Animation -------------------- */
+/* -------------------- Gauge Animation -------------------- */
 (function() {
     const gaugeArc = document.getElementById('gaugeArc');
     const gaugeIQtext = document.getElementById('gaugeIQ');
@@ -342,9 +322,8 @@
         setTimeout(() => {
             gaugeArc.style.transition = "stroke-dasharray 1.2s ease-out";
             gaugeArc.style.strokeDasharray = (ratio * len) + " " + len;
-        }, 200);
+        }, 300);
 
-        // Center counter
         let start = minIQ;
         const end = clamped;
         const duration = 1100;
@@ -361,7 +340,6 @@
     });
 })();
 
-
 /* -------------------- Radar Chart -------------------- */
 {% if category_results %}
 const ctx = document.getElementById('radarChart').getContext('2d');
@@ -376,7 +354,7 @@ new Chart(ctx, {
             fill: true,
             backgroundColor: "rgba(37,117,252,0.18)",
             borderColor: "#2575fc",
-            pointBackgroundColor: "#2575fc",
+            pointBackgroundColor: "#2575fc"
         }]
     },
     options: {

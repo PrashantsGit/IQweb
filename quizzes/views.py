@@ -7,15 +7,26 @@ from django.contrib.auth import login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.db.models import Q
-
+import os
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.utils import ImageReader
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.platypus import Paragraph
+from io import BytesIO
+import qrcode
+import base64
 from .models import Test, Question, Answer, UserTestAttempt, UserAnswer
+from django.conf import settings
+import google.generativeai as genai
 
 import math
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.colors import HexColor
-from django.utils import timezone   # ✅ FIXED — timezone-safe
+from django.utils import timezone  
 
 # -----------------------------
 # REGISTER VIEW
@@ -224,6 +235,15 @@ def test_submit(request, attempt_id):
             "total": total_cat,
             "iq": cat_iq,
         })
+    # ------------------------------
+    # 5. AI FEEDBACK
+    # ------------------------------
+    ai_feedback = generate_ai_feedback(
+        iq_score,
+        category_results,
+        correct_count,
+        total_questions
+    )
 
     # ------------------------------
     # 5. SAVE ATTEMPT
@@ -244,40 +264,157 @@ def test_submit(request, attempt_id):
         "score_percentage": score_percentage,
         "iq_score": iq_score,
         "category_results": category_results,
+        "ai_feedback": ai_feedback,
     })
 
 
 
 
 # -----------------------------
-# DOWNLOAD CERTIFICATE (PDF)
+# DOWNLOAD CERTIFICATE (Premium PDF)
 # -----------------------------
 @login_required
 def download_certificate(request, attempt_id):
+    
+
     attempt = get_object_or_404(UserTestAttempt, pk=attempt_id)
 
+    # CATEGORY IQ RESULTS (same logic as results page)
+    questions = Question.objects.filter(test=attempt.test)
+    user_answers = UserAnswer.objects.filter(attempt=attempt).select_related("selected_answer", "question")
+
+    categories = {
+        "NR": "Numerical",
+        "VR": "Verbal",
+        "LR": "Logical",
+        "SR": "Spatial",
+        "MR": "Memory",
+    }
+
+    category_results = []
+    for code, name in categories.items():
+        cat_questions = questions.filter(category=code)
+        total_cat = cat_questions.count()
+        if total_cat == 0:
+            continue
+
+        correct_cat = user_answers.filter(
+            question__category=code,
+            selected_answer__is_correct=True
+        ).count()
+
+        cat_ratio = correct_cat / total_cat
+        cat_iq = int(60 + cat_ratio * 100)
+
+        category_results.append((name, correct_cat, total_cat, cat_iq))
+
+    # ----------------------- PDF START -----------------------
     buffer = BytesIO()
     pdf = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
 
+    # Colors
+    primary = colors.HexColor("#3B82F6")      # Blue
+    dark = colors.HexColor("#0F172A")         # Dark blue-black
+    gray_light = colors.HexColor("#94A3B8")   # Soft gray
+
+    # ----------------------- BACKGROUND -----------------------
+    # Light geometric brain watermark
+    brain_path = os.path.join(settings.BASE_DIR, "static", "img", "brain.png")
+    if os.path.exists(brain_path):
+        pdf.drawImage(
+            ImageReader(brain_path),
+            80, 200,
+            width=450, height=450,
+            mask='auto',
+            preserveAspectRatio=True,
+            anchor='c'
+        )
+
+    # ----------------------- HEADER -----------------------
+    pdf.setFillColor(primary)
+    pdf.rect(0, height - 80, width, 80, fill=1)
+
+    pdf.setFillColor(colors.white)
+    pdf.setFont("Helvetica-Bold", 28)
+    pdf.drawCentredString(width / 2, height - 45, "OFFICIAL IQ CERTIFICATE")
+
+    # ----------------------- NAME -----------------------
+    pdf.setFillColor(dark)
     pdf.setFont("Helvetica-Bold", 24)
-    pdf.drawString(100, 750, "IQ Test Certificate")
+    pdf.drawCentredString(width / 2, height - 140, attempt.user.username)
 
     pdf.setFont("Helvetica", 14)
-    pdf.drawString(100, 700, f"Name: {request.user.username}")
-    pdf.drawString(100, 675, f"Test: {attempt.test.title}")
-    pdf.drawString(100, 650, f"Score: {attempt.score}%")
+    pdf.drawCentredString(width / 2, height - 165, f"has successfully completed")
 
-    if attempt.end_time:
-        pdf.drawString(100, 625, f"Date: {attempt.end_time.date()}")
+    # ----------------------- TEST TITLE -----------------------
+    pdf.setFont("Helvetica-Bold", 18)
+    pdf.drawCentredString(width / 2, height - 195, attempt.test.title)
 
+    # ----------------------- IQ SCORE BADGE -----------------------
+    pdf.setFillColor(primary)
+    pdf.circle(width / 2, height - 290, 55, fill=1)
+
+    pdf.setFillColor(colors.white)
+    pdf.setFont("Helvetica-Bold", 36)
+    pdf.drawCentredString(width / 2, height - 300, str(int(attempt.iq_score)))
+
+    pdf.setFont("Helvetica", 12)
+    pdf.drawCentredString(width / 2, height - 325, "IQ SCORE")
+
+    # ----------------------- CATEGORY TABLE -----------------------
+    y = height - 420
+    pdf.setFont("Helvetica-Bold", 16)
+    pdf.setFillColor(dark)
+    pdf.drawString(70, y, "Category Performance")
+    y -= 30
+
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.setFillColor(primary)
+    pdf.drawString(70, y, "Category")
+    pdf.drawString(230, y, "Correct")
+    pdf.drawString(330, y, "Total")
+    pdf.drawString(430, y, "IQ")
+    y -= 20
+
+    pdf.setFillColor(dark)
+    pdf.setFont("Helvetica", 12)
+
+    for name, corr, tot, iq in category_results:
+        pdf.drawString(70, y, name)
+        pdf.drawString(230, y, str(corr))
+        pdf.drawString(330, y, str(tot))
+        pdf.drawString(430, y, str(iq))
+        y -= 22
+
+    # ----------------------- DATE -----------------------
+    pdf.setFont("Helvetica", 12)
+    pdf.setFillColor(gray_light)
+    pdf.drawString(70, 120, f"Date: {attempt.end_time.date()}")
+
+    # ----------------------- SIGNATURE -----------------------
+    pdf.setFillColor(dark)
+    pdf.setFont("Helvetica-Bold", 14)
+    pdf.drawString(70, 90, "Certified by TestIQ Platform")
+
+    pdf.line(70, 85, 250, 85)
+
+    # ----------------------- QR CODE -----------------------
+    qr_data = f"https://yourdomain.com/certificate/verify/{attempt.id}/"
+    qr_img = qrcode.make(qr_data)
+    qr_buffer = BytesIO()
+    qr_img.save(qr_buffer, format="PNG")
+    qr_buffer.seek(0)
+
+    pdf.drawImage(ImageReader(qr_buffer), width - 150, 60, width=80, height=80)
+
+    # ----------------------- FINALIZE -----------------------
     pdf.showPage()
     pdf.save()
 
     buffer.seek(0)
+    return HttpResponse(buffer, content_type="application/pdf")
 
-    response = HttpResponse(buffer, content_type="application/pdf")
-    response["Content-Disposition"] = 'attachment; filename=\"certificate.pdf\"'
-    return response
 
 
 # -----------------------------
@@ -290,3 +427,41 @@ def user_dashboard(request):
     return render(request, "quizzes/user_dashboard.html", {
         "completed_attempts": attempts,
     })
+
+def landing(request):
+    print("LANDING VIEW WORKING")
+    sample_questions = [
+        ("sample_1.png", "Pattern Recognition", "Find the missing bar in the pattern."),
+        ("sample_2.png", "Shape Sequence", "Identify Total no of cubes in image."),
+        ("sample_3.png", "Pattern Recognition", "Find the missing bar in the pattern."),
+        ("sample_4.png", "Directional Reasoning", "Predict the final arrow direction."),
+    ]
+
+    return render(request, "quizzes/landing.html", {
+        "sample_questions": sample_questions
+    })
+
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+def generate_ai_feedback(iq_score, category_results, correct_count, total_questions):
+    categories_text = "\n".join(
+        [f"{c['name']}: {c['correct']}/{c['total']} (IQ {c['iq']})"
+         for c in category_results]
+    )
+
+    prompt = f"""
+    You are a cognitive psychology expert...
+    (same prompt)
+    """
+
+    model = genai.GenerativeModel("gemini-2.5-flash-lite")
+
+    response = model.generate_content(prompt)
+
+
+    # 🔥 Correct extraction for your SDK:
+    try:
+        return response.candidates[0].content.parts[0].text.strip()
+    except Exception as e:
+        print("AI EXTRACT ERROR:", e)
+        return "⚠️ AI feedback could not be generated. Please try again."
