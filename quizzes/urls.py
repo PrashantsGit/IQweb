@@ -24,4 +24,14 @@ urlpatterns = [
     path('attempt/<int:attempt_id>/question/<int:question_num>/', views.take_question, name='take_question'),
     path('test/submit/<int:attempt_id>/', views.test_submit, name='test_submit'),
     path('attempt/<int:attempt_id>/certificate/', views.download_certificate, name='download_certificate'),
+    
+    path("practice/", views.practice_home, name="practice_home"),
+    path("practice/sudoku/", views.sudoku_game, name="sudoku_game"),
+
+    # Games
+    path('practice/memory/', views.memory_game, name='memory_game'),
+    path('practice/memory/save-score/', views.save_memory_score, name='save_memory_score'),
+    path("practice/puzzle/", views.puzzle_game, name="puzzle_game"),
+
+
 ]

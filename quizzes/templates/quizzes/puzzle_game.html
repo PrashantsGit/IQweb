@@ -1,0 +1,80 @@
+{% extends "quizzes/base.html" %}
+{% block title %}Logic Puzzle — Practice{% endblock %}
+
+{% block extra_css %}
+<style>
+.puzzle-container {
+    max-width: 680px;
+    margin: 30px auto;
+    padding: 30px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 20px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.puzzle-question {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+input[type=text] {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.15);
+    margin-top: 12px;
+}
+
+#feedback {
+    margin-top: 15px;
+    font-weight: 600;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="puzzle-container">
+    <h3>🧩 Logic Puzzle</h3>
+    <p class="puzzle-question">
+        {{ puzzle.question }}
+    </p>
+
+    <input type="text" id="userAnswer" placeholder="Your answer..." />
+
+    <button class="btn btn-primary mt-3" onclick="checkAnswer()">Check Answer</button>
+
+    <p id="feedback"></p>
+
+    <div class="mt-4">
+        <a href="{% url 'puzzle_game' %}" class="btn btn-ghost">New Puzzle</a>
+    </div>
+
+    <input type="hidden" id="correctAnswer" value="{{ puzzle.answer }}">
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function checkAnswer(){
+    const u = document.getElementById("userAnswer").value.trim().toLowerCase();
+    const correct = document.getElementById("correctAnswer").value.trim().toLowerCase();
+    const feedback = document.getElementById("feedback");
+
+    if (!u){
+        feedback.textContent = "Enter an answer!";
+        feedback.style.color = "#ef4444";
+        return;
+    }
+
+    if (u == correct){
+        feedback.textContent = "Correct! 🎉";
+        feedback.style.color = "#10b981";
+    } else {
+        feedback.textContent = "Incorrect ❌ Try again!";
+        feedback.style.color = "#ef4444";
+    }
+}
+</script>
+{% endblock %}

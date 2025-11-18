@@ -20,14 +20,20 @@ import base64
 from .models import Test, Question, Answer, UserTestAttempt, UserAnswer
 from django.conf import settings
 import google.generativeai as genai
-
+import requests
 import math
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.colors import HexColor
 from django.utils import timezone  
-
+import json
+import random
+from django.http import JsonResponse, HttpResponseBadRequest
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from django.utils import timezone
 # -----------------------------
 # REGISTER VIEW
 # -----------------------------
@@ -449,19 +455,113 @@ def generate_ai_feedback(iq_score, category_results, correct_count, total_questi
          for c in category_results]
     )
 
-    prompt = f"""
-    You are a cognitive psychology expert...
-    (same prompt)
-    """
+    model = genai.GenerativeModel(
+        "gemini-2.5-flash-lite",
+        system_instruction=(
+            "You are an expert psychometric evaluator. Your ONLY task is to generate "
+            "personalized IQ feedback based on the user's test results. "
+            "NEVER introduce yourself. NEVER ask what the user wants. "
+            "NEVER provide general psychology help. Do not explain cognition topics. "
+            "Respond ONLY with structured feedback: strengths, weaknesses, interpretation, "
+            "and improvement plan. Keep length between 180 and 250 words."
+        )
+    )
 
-    model = genai.GenerativeModel("gemini-2.5-flash-lite")
+    prompt = f"""
+    Generate personalized IQ test feedback.
+
+    User results:
+    - IQ Score: {iq_score}
+    - Correct Answers: {correct_count}/{total_questions}
+    - Category Breakdown:
+      {categories_text}
+
+    Structure your feedback EXACTLY in this format:
+
+    1. **Strengths** — based on performance.
+    2. **Areas to Improve** — based strictly on weaker categories.
+    3. **IQ Interpretation** — short explanation of what their IQ means.
+    4. **Personalized Improvement Plan** — 3–5 bullet points.
+    """
 
     response = model.generate_content(prompt)
 
-
-    # 🔥 Correct extraction for your SDK:
+    # Extract correctly for your SDK
     try:
-        return response.candidates[0].content.parts[0].text.strip()
+        text = response.candidates[0].content.parts[0].text.strip()
+        return text
     except Exception as e:
         print("AI EXTRACT ERROR:", e)
         return "⚠️ AI feedback could not be generated. Please try again."
+
+
+def practice_home(request):
+    return render(request, "quizzes/practice_home.html")
+
+
+def sudoku_game(request):
+    # Fetch puzzle from free API
+    api_url = "https://sudoku-api.vercel.app/api/dosuku"
+    puzzle = requests.get(api_url).json()
+
+    grid = puzzle["newboard"]["grids"][0]["value"]  # 9x9 grid
+
+    return render(request, "quizzes/sudoku.html", {
+        "grid": grid
+    })
+
+# MEMORY GAME (render)
+def memory_game(request):
+    """
+    Renders the memory match game. The board is generated in JS,
+    so we just render the template. You can pass options if needed.
+    """
+    # You can tune board size here (pairs_count). Default: 8 pairs => 4x4 grid
+    return render(request, "quizzes/memory_game.html", {"pairs_count": 8})
+
+
+# MEMORY SCORE SAVE (AJAX) - optional persistence
+@login_required
+@require_POST
+def save_memory_score(request):
+    """
+    Accepts JSON POST: {"moves": int, "time": seconds, "pairs": int}
+    Saves score for the logged-in user if desired. Returns JSON result.
+    """
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+        moves = int(payload.get("moves", 0))
+        time_taken = float(payload.get("time", 0))
+        pairs = int(payload.get("pairs", 0))
+    except Exception:
+        return HttpResponseBadRequest("Invalid payload")
+
+    # OPTIONAL: persist to DB if you have a model. For now, just echo back.
+    score_data = {
+        "user": request.user.username,
+        "moves": moves,
+        "time": time_taken,
+        "pairs": pairs,
+        "saved_at": timezone.now().isoformat()
+    }
+
+    # If you want to store in DB, uncomment and create a model GameScore.
+    # GameScore.objects.create(user=request.user, game_name="memory", moves=moves, time_taken=time_taken, pairs=pairs)
+
+    return JsonResponse({"status": "ok", "score": score_data})
+
+def puzzle_game(request):
+    # Fetch puzzle from PuzzleDB API
+    api_url = "https://api.puzzlehub.org/v1/puzzles?type=logic&limit=1"
+    try:
+        response = requests.get(api_url, timeout=5).json()
+        puzzle = response["puzzles"][0]
+    except Exception:
+        puzzle = {
+            "question": "API error. Here's a backup puzzle: What comes next? 2, 4, 8, 16, ?",
+            "answer": "32"
+        }
+
+    return render(request, "quizzes/puzzle_game.html", {
+        "puzzle": puzzle
+    })

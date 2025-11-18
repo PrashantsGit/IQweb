@@ -1,0 +1,366 @@
+{% extends "quizzes/base.html" %}
+{% block title %}Memory Match — Practice{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Basic layout */
+.memory-wrapper {
+  max-width: 920px;
+  margin: 28px auto;
+  padding: 20px;
+}
+.memory-panel {
+  background: rgba(255,255,255,0.45);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 12px 30px rgba(15,23,42,0.08);
+}
+
+/* top controls */
+.memory-controls {
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:14px;
+}
+.memory-controls .left { display:flex; gap:10px; align-items:center; }
+
+/* grid */
+.memory-grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap:10px;
+  max-width: 720px;
+  margin: 14px auto 0;
+}
+
+.card {
+  position: relative;
+  width:100%;
+  padding-top: 100%; /* square */
+  cursor: pointer;
+  border-radius: 10px;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  perspective: 700px;
+}
+
+.card-inner {
+  position:absolute;
+  inset:0;
+  transition: transform 0.45s cubic-bezier(.2,.9,.2,1);
+  transform-style: preserve-3d;
+}
+
+/* flipped */
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+/* faces */
+.card-front, .card-back {
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 10px;
+}
+
+.card-front {
+  background: linear-gradient(135deg,#6a11cb,#2575fc);
+  color:white;
+  transform: rotateY(180deg);
+  font-size:26px;
+}
+
+.card-back {
+  background: #ffffff;
+  border: 1px solid rgba(15,23,42,0.06);
+  color: #0f172a;
+}
+
+/* matched */
+.card.matched .card-front {
+  background: linear-gradient(135deg,#10b981,#3b82f6);
+  box-shadow: 0 6px 18px rgba(16,185,129,0.12);
+}
+
+/* small text */
+.small-muted { color: rgba(30,41,59,0.6); font-size:0.95rem; }
+
+/* overlay on complete */
+.end-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items:center;
+  justify-content:center;
+  background: rgba(2,6,23,0.45);
+  z-index: 9999;
+}
+.end-overlay .card {
+  max-width:520px;
+  transform:none;
+  cursor:default;
+}
+.end-panel {
+  background:white; padding:24px; border-radius:14px; text-align:center;
+}
+.btn-primary { background: linear-gradient(135deg,#6a11cb,#2575fc); color:#fff; padding:10px 16px; border-radius:10px; border:none; }
+.btn-ghost { background:transparent; border:1px solid rgba(37,117,252,0.14); padding:10px 14px; border-radius:10px; color:#2563eb; }
+
+@media (max-width:480px) {
+  .memory-grid { grid-template-columns: repeat(4, 1fr); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="memory-wrapper">
+  <div class="memory-panel">
+    <div class="memory-controls">
+      <div class="left">
+        <div>
+          <strong>Memory Match</strong><br><span class="small-muted">Find all pairs</span>
+        </div>
+      </div>
+
+      <div class="right">
+        <span class="small-muted me-3">Time: <strong id="timeDisplay">0s</strong></span>
+        <span class="small-muted me-3">Moves: <strong id="movesDisplay">0</strong></span>
+        <span class="small-muted">Pairs: <strong id="matchedDisplay">0</strong>/<strong id="pairsCount">{{ pairs_count|default:pairs_count }}</strong></span>
+        <button id="restartBtn" class="btn btn-ghost ms-3">Restart</button>
+      </div>
+    </div>
+
+    <div id="grid" class="memory-grid" aria-live="polite"></div>
+  </div>
+</div>
+
+<!-- End overlay -->
+<div id="endOverlay" class="end-overlay">
+  <div class="end-panel">
+    <h3>Nice work!</h3>
+    <p class="small-muted" id="endSummary"></p>
+    <div style="margin-top:16px;">
+      <button id="playAgainBtn" class="btn-primary">Play Again</button>
+      <button id="closeOverlayBtn" class="btn-ghost ms-2">Close</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* Memory Match game JS
+   - Uses emoji set for cards (no images required)
+   - Grid size controlled by pairsCount variable
+*/
+
+(function(){
+
+const PAIRS = {{ pairs_count|default:8 }};  // number of distinct pairs (8 -> 4x4)
+const EMOJI_POOL = ["🐶","🦊","🐼","🦁","🐵","🐸","🐷","🐨","🐯","🦄","🦉","🐝","🐙","🐬","🦋","🐞","🍎","🍇","🍓","🍍"];
+
+const gridEl = document.getElementById('grid');
+const timeDisplay = document.getElementById('timeDisplay');
+const movesDisplay = document.getElementById('movesDisplay');
+const matchedDisplay = document.getElementById('matchedDisplay');
+const restartBtn = document.getElementById('restartBtn');
+
+const endOverlay = document.getElementById('endOverlay');
+const endSummary = document.getElementById('endSummary');
+const playAgainBtn = document.getElementById('playAgainBtn');
+const closeOverlayBtn = document.getElementById('closeOverlayBtn');
+
+let board = [];
+let flipped = []; // indexes of currently flipped non-matched cards
+let matched = new Set();
+let moves = 0;
+let timer = null;
+let seconds = 0;
+let pairsFound = 0;
+
+function init(){
+  resetState();
+  createBoard();
+  render();
+  startTimer();
+}
+
+function resetState(){
+  board = [];
+  flipped = [];
+  matched.clear();
+  moves = 0;
+  seconds = 0;
+  pairsFound = 0;
+  movesDisplay.textContent = moves;
+  timeDisplay.textContent = seconds + "s";
+  matchedDisplay.textContent = pairsFound;
+  endOverlay.style.display = "none";
+  if(timer) { clearInterval(timer); timer = null; }
+}
+
+function startTimer(){
+  if(timer) clearInterval(timer);
+  timer = setInterval(()=>{
+    seconds++;
+    timeDisplay.textContent = seconds + "s";
+  }, 1000);
+}
+
+function createBoard(){
+  // pick random emojis
+  const pool = shuffleArray(EMOJI_POOL.slice()).slice(0, PAIRS);
+  const pairset = pool.concat(pool);
+  board = shuffleArray(pairset);
+}
+
+function render(){
+  gridEl.innerHTML = "";
+  board.forEach((value, idx) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.setAttribute('data-index', idx);
+    if(matched.has(idx)) card.classList.add('matched');
+    if(flipped.includes(idx) || matched.has(idx)) card.classList.add('flipped');
+
+    const inner = document.createElement('div');
+    inner.className = 'card-inner';
+
+    const front = document.createElement('div');
+    front.className = 'card-front';
+    front.innerText = value;
+
+    const back = document.createElement('div');
+    back.className = 'card-back';
+    back.innerText = "🧠";
+
+    inner.appendChild(front);
+    inner.appendChild(back);
+    card.appendChild(inner);
+
+    card.addEventListener('click', ()=> onCardClick(idx));
+
+    gridEl.appendChild(card);
+  });
+}
+
+function onCardClick(idx){
+  if(matched.has(idx)) return;
+  if(flipped.includes(idx)) return;
+  if(flipped.length === 2) return;
+
+  flipped.push(idx);
+  render();
+
+  if(flipped.length === 2){
+    moves++;
+    movesDisplay.textContent = moves;
+    const [a,b] = flipped;
+    if(board[a] === board[b]){
+      // match
+      matched.add(a);
+      matched.add(b);
+      pairsFound++;
+      matchedDisplay.textContent = pairsFound;
+      flipped = [];
+      render();
+
+      if(pairsFound === PAIRS){
+        finishGame();
+      }
+    } else {
+      // not match -> flip back after a short delay
+      setTimeout(()=>{
+        flipped = [];
+        render();
+      }, 700);
+    }
+  }
+}
+
+function finishGame(){
+  clearInterval(timer);
+  // show overlay with summary
+  endSummary.innerHTML = `You found <strong>${pairsFound}</strong> pairs in <strong>${moves}</strong> moves and <strong>${seconds}s</strong>.`;
+  endOverlay.style.display = "flex";
+
+  // optionally save score to server if logged in
+  saveScoreIfLoggedIn(moves, seconds, pairsFound);
+}
+
+function saveScoreIfLoggedIn(moves, time, pairs){
+  // attempt to POST to server endpoint. server requires CSRF
+  // use fetch; if server returns 401 or not logged in, we ignore
+  try {
+    const url = "{% url 'save_memory_score' %}";
+    const payload = { moves: moves, time: time, pairs: pairs };
+
+    // CSRF token helper
+    function getCookie(name) {
+      const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+      return v ? v.pop() : '';
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrftoken
+      },
+      body: JSON.stringify(payload)
+    }).then(r => {
+        if (!r.ok) {
+          // not saved (maybe anonymous); ignore silently
+          return;
+        }
+        return r.json();
+    }).then(data=>{
+        // optional confirmation (no UI change)
+        console.log("score saved", data);
+    }).catch(err=>{
+        console.log("score save error", err);
+    });
+  } catch(e){
+    console.log("save error", e);
+  }
+}
+
+/* UTILS */
+function shuffleArray(a){
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* controls */
+restartBtn.addEventListener('click', init);
+playAgainBtn.addEventListener('click', ()=>{ init(); endOverlay.style.display='none'; });
+closeOverlayBtn.addEventListener('click', ()=>{ endOverlay.style.display='none'; });
+
+/* keyboard accessibility: number keys 1..9 to flip first row items when focused on page */
+document.addEventListener('keydown', (e)=>{
+  if (e.key >= '1' && e.key <= '9') {
+    // attempt to flip a card in sequence (useful on mobile keyboard)
+    const idx = parseInt(e.key,10)-1;
+    if (idx >= 0 && idx < board.length) onCardClick(idx);
+  }
+});
+
+init();
+
+})(); // IIFE
+</script>
+{% endblock %}

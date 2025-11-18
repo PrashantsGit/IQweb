@@ -1,0 +1,75 @@
+{% extends "quizzes/base.html" %}
+{% block title %}Sudoku Game{% endblock %}
+
+{% block extra_css %}
+<style>
+.sudoku-container {
+    max-width: 480px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+}
+
+.sudoku-grid {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 2px;
+}
+
+.sudoku-cell {
+    width: 100%;
+    padding-top: 100%; /* Square cells */
+    position: relative;
+}
+
+.sudoku-cell input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #d1d5db;
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.sudoku-cell input:focus {
+    outline: 3px solid #3b82f6;
+}
+
+.prefilled {
+    background: #e0e7ff;
+    font-weight: bold;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="sudoku-container">
+    <h3 class="text-center mb-3">🧩 Sudoku</h3>
+
+    <div class="sudoku-grid">
+        {% for row in grid %}
+            {% for cell in row %}
+            <div class="sudoku-cell">
+                {% if cell == 0 %}
+                    <input type="text" maxlength="1" />
+                {% else %}
+                    <input type="text" value="{{ cell }}" readonly class="prefilled" />
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="{% url 'sudoku_game' %}" class="btn btn-primary">
+            New Puzzle
+        </a>
+    </div>
+</div>
+
+{% endblock %}
